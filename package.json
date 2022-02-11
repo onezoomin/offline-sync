@@ -4,7 +4,7 @@
   "repository": "https://github.com/st-ax/preact-ts-offline-first",
   "license": "CC-BY-NC-4.0",
   "scripts": {
-    "dev": "vite",
+    "dev": "cross-env NODE_ENV=dev vite",
     "tsc": "tsc -p . --noEmit",
     "build": "cross-env NODE_ENV=production vite build",
     "lint": "eslint src/**/*.ts[x] --fix",
@@ -13,16 +13,28 @@
   "dependencies": {
     "@emotion/react": "^11.7.1",
     "@emotion/styled": "^11.3.0",
+    "@isomorphic-git/lightning-fs": "^4.4.1",
     "@mui/icons-material": "^5.4.1",
     "@mui/material": "^5.4.1",
+    "buffer": "^6.0.3",
     "dexie": "^3.2.0",
     "dexie-observable": "^3.0.0-beta.11",
     "dexie-react-hooks": "^1.1.1",
     "dexie-syncable": "^3.0.0-beta.10",
+    "diff": "^5.0.0",
+    "diff-lines": "^1.1.1",
+    "events": "^3.3.0",
+    "isomorphic-git": "^1.11.2",
+    "json-stable-stringify": "^1.0.1",
     "lodash": "^4.17.21",
     "mdi-preact": "^8.1.0",
     "mui-image": "^1.0.4",
-    "preact": "^10.6.5"
+    "pouchdb-adapter-idb": "^7.2.2",
+    "preact": "^10.6.5",
+    "process": "^0.11.10",
+    "rollup-plugin-polyfill-node": "^0.8.0",
+    "rxdb": "^11.6.0",
+    "rxjs": "^7.5.4"
   },
   "devDependencies": {
     "@prefresh/vite": "^2.2.6",

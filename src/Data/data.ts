@@ -1,5 +1,7 @@
 import { Task } from '../Model/Task'
+import { gitInit } from './git'
 import { todoDB } from './offline'
+import { rxInit } from './rxdb'
 
 const getTaskStates = async function getTaskStates () {
   console.log(await todoDB.ActiveTasks.count(), 'active tasks in db')
@@ -7,6 +9,8 @@ const getTaskStates = async function getTaskStates () {
   console.log(currentActiveTasks)
 }
 void getTaskStates()
+void rxInit()
+void gitInit()
 
 export const addActiveTask = async (newTask: Task) => await todoDB.ActiveTasks.add(newTask)
 export const updateActiveTask = async (taskToUpdate: Task) => await todoDB.ActiveTasks.put(taskToUpdate)

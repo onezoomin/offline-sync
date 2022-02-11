@@ -11,6 +11,22 @@
     <link rel="manifest" href="/manifest.json">
     <title>TodoApp</title>
     <link rel="icon" href="/icons8-tick-box.svg">
+    <script>
+      // <PolyfillCrapshit>
+      window.global = window
+    </script>
+    <script type="module">
+        // import process from "process"
+        // import React from "react"
+        import { Buffer } from "buffer"
+        // import EventEmitter from "events"
+        
+        // window.process = process
+        // window.React = React
+        window.Buffer = Buffer // needed for one of these: @isomorphic-git/lightning-fs, isomorphic-git, json-stable-stringify
+        // window.EventEmitter = EventEmitter
+        // </PolyfillCrapshit>
+    </script>
   </head>
   <body>
     <div id="app"></div>

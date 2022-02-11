@@ -1,0 +1,8 @@
+node_modules
+pnpm
+dist
+.vscode
+.history
+offline.html
+storybook-static
+.DS_Store

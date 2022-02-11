@@ -1,0 +1,45 @@
+{
+    "files.exclude": {
+        "**/.git": true,
+        "**/.svn": true,
+        "**/.hg": true,
+        "**/CVS": true,
+        "**/.DS_Store": true,
+        ".history": true
+    },
+    "explorerExclude.backup": null,
+    "workbench.colorCustomizations": {
+        "activityBar.activeBackground": "#26862d",
+        "activityBar.activeBorder": "#3a31ae",
+        "activityBar.background": "#26862d",
+        "activityBar.foreground": "#e7e7e7",
+        "activityBar.inactiveForeground": "#e7e7e799",
+        "activityBarBadge.background": "#3a31ae",
+        "activityBarBadge.foreground": "#e7e7e7",
+        "statusBar.background": "#1b5e20",
+        "statusBar.foreground": "#e7e7e7",
+        "statusBarItem.hoverBackground": "#26862d",
+        "titleBar.activeBackground": "#1b5e20",
+        "titleBar.activeForeground": "#e7e7e7",
+        "titleBar.inactiveBackground": "#1b5e2099",
+        "titleBar.inactiveForeground": "#e7e7e799"
+    },
+    "editor.codeActionsOnSave": {
+        "source.fixAll": true,
+        "source.organizeImports": true,
+    },
+    "peacock.color": "#1B5E20",
+    "eslint.format.enable": true,
+    "eslint.packageManager": "yarn",
+    "editor.formatOnSave": true,
+    "typescript.format.enable": false,
+    "javascript.format.enable": false,
+    "auto-close-tag.disableOnLanguage": [
+        "javascript",
+        "typescript"
+    ],
+    "editor.defaultFormatter": "dbaeumer.vscode-eslint",
+    "git-graph.dialog.merge.noFastForward": false,
+    "git.fetchOnPull": true,
+    "debug.internalConsoleOptions": "neverOpen"
+}

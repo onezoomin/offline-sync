@@ -1,6 +1,6 @@
 {
   "name": "preact-ts-offline-first",
-  "version": "0.8.1",
+  "version": "0.8.2",
   "repository": "https://github.com/st-ax/preact-ts-offline-first",
   "license": "CC-BY-NC-4.0",
   "scripts": {

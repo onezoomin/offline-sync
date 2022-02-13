@@ -1,6 +1,7 @@
 import { Task } from '../Model/Task'
+import { todoDB } from './dexie'
 import { gitInit } from './git'
-import { todoDB } from './offline'
+import { initRepli } from './replicache'
 import { rxInit } from './rxdb'
 
 const getTaskStates = async function getTaskStates () {
@@ -11,8 +12,9 @@ const getTaskStates = async function getTaskStates () {
 void getTaskStates()
 void rxInit()
 void gitInit()
+void initRepli()
 
-export const addActiveTask = async (newTask: Task) => await todoDB.ActiveTasks.add(newTask)
+export const addActiveTask = async (newTask: Task) => await todoDB.ActiveTasks.add(new Task(newTask))
 export const updateActiveTask = async (taskToUpdate: Task) => await todoDB.ActiveTasks.put(taskToUpdate)
 export const delActiveTask = async (idToDelete: number) => await todoDB.ActiveTasks.delete(idToDelete)
 export const delCompletedTask = async (idToDelete: number) => await todoDB.CompletedTasks.delete(idToDelete)

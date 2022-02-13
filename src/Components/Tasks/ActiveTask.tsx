@@ -7,6 +7,7 @@ import { useRef, useState } from 'preact/hooks'
 import { ActiveTasksQuery, completeActiveTask, delActiveTask, updateActiveTask } from '../../Data/data'
 import { Task } from '../../Model/Task'
 import { TaskStatus } from '../../Model/TaskStatus'
+import { utcTs } from '../../Utils/js-utils'
 import Editable from '../Editable'
 
 export default function ActiveTask () {
@@ -31,6 +32,7 @@ export default function ActiveTask () {
   }
   function updateTask (task: Task, newVal) {
     task.task = newVal
+    task.modified = utcTs()
     void updateActiveTask(task)
   }
 

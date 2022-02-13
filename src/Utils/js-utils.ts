@@ -1,8 +1,17 @@
 export function formatAddressShort (addr: string = '???'): string {
   return `${addr.slice(0, 3).toUpperCase()}...${addr.slice(-3).toUpperCase()}`
 }
+const p = performance.now()
+// milliseconds since epoch (100nanosecond "precision")
+export function utcTs (): number {
+  const now = new Date()
+  const precision = performance.now() - p
+  return (now.getTime() + precision + (now.getTimezoneOffset() * 60 * 1000))
+}
+
 export function styledConsoleLog (...args) {
-  const argArray = []
+  // https://stackoverflow.com/questions/7505623/colors-in-javascript-console#comment23574763_13017382
+  const argArray: string[] = []
 
   if (args.length) {
     const startTagRe = /<span\s+style=(['"])([^'"]*)\1\s*>/gi
@@ -10,7 +19,8 @@ export function styledConsoleLog (...args) {
 
     let reResultArray
     argArray.push(args[0].replace(startTagRe, '%c').replace(endTagRe, '%c'))
-    while (reResultArray = startTagRe.exec(args[0])) {
+
+    while (reResultArray = startTagRe.exec(args[0])) { // eslint-disable-line no-cond-assign
       argArray.push(reResultArray[2])
       argArray.push('')
     }

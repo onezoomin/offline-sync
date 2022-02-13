@@ -1,0 +1,15 @@
+
+{  
+  "cookie": "foo1",  
+  "lastMutationID": 5,  
+  "patch": [
+    {
+      "op": "put",
+      "key": "todo/5",
+      "value": {
+        "name": "createTodo", 
+        "args": {"order": 5, "text": "new todo!"}
+      }
+    }
+  ]
+}

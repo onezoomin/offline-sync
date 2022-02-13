@@ -9,6 +9,9 @@ import WindiCSS from 'vite-plugin-windicss'
 export default defineConfig({
   server: {
     port: 3030,
+    cors: {
+      allowedHeaders: '*',
+    },
   },
   esbuild: {
     jsxFactory: 'h',

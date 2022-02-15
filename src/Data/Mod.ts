@@ -1,29 +1,27 @@
 import { utcTs } from '../Utils/js-utils'
-import { TaskStatus } from './TaskStatus'
 
 export class TimeStamped {
   created?: number
   modified?: number
 
-  constructor (taskOptions: TaskOpts) {
+  constructor (taskOptions: TimeStamped) {
     taskOptions.created = taskOptions.created ?? utcTs()
     taskOptions.modified = taskOptions.modified ?? taskOptions.created
 
     Object.assign(this, taskOptions)
   }
 }
-export class TaskOpts extends TimeStamped {
-  task: string
-  status: TaskStatus
-  user?: string = '0x123'
+export class ModOpts extends TimeStamped {
+  log: Record<any, any>
+  priKey: [number, string]
 
-  constructor (taskOptions: TaskOpts) {
+  constructor (taskOptions: ModOpts) {
     super(taskOptions)
     Object.assign(this, taskOptions)
   }
 }
-export class Task extends TaskOpts {
-  public get short (): string {
-    return `${this.task.slice(0, 20)}...`
+export class Mod extends ModOpts {
+  public get type (): string {
+    return `${this.log.toString()}`
   }
 }

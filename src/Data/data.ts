@@ -1,18 +1,15 @@
 import { Task } from '../Model/Task'
 import { todoDB } from './dexie'
-import { gitInit } from './git'
-import { initRepli } from './replicache'
-import { rxInit } from './rxdb'
 
-const getTaskStates = async function getTaskStates () {
-  console.log(await todoDB.ActiveTasks.count(), 'active tasks in db')
-  const currentActiveTasks = await todoDB.ActiveTasks.toArray()
-  console.log(currentActiveTasks)
-}
-void getTaskStates()
-void rxInit()
-void gitInit()
-void initRepli()
+// const getTaskStates = async function getTaskStates () {
+//   console.log(await todoDB.ActiveTasks.count(), 'active tasks in db')
+//   const currentActiveTasks = await todoDB.ActiveTasks.toArray()
+//   console.log(currentActiveTasks)
+// }
+// void getTaskStates()
+// void rxInit()
+// void gitInit()
+// void initRepli()
 
 export const addActiveTask = async (newTask: Task) => await todoDB.ActiveTasks.add(new Task(newTask))
 export const updateActiveTask = async (taskToUpdate: Task) => await todoDB.ActiveTasks.put(taskToUpdate)

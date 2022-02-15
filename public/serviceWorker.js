@@ -1,6 +1,6 @@
-var cacheName = 'cache-v1';
+const cacheName = 'cache-v1';
 
-var filesToCache = [
+const filesToCache = [
 	'/index.html',
   '/',
   '/dist/assets/index.ff80710c.js',
@@ -13,28 +13,29 @@ var filesToCache = [
 
 //Adding 'install' event listener
 self.addEventListener('install', function (event) {
-  console.log('Event: Install');
-
-  event.waitUntil(
-  	//Open the cache
-  	caches.open(cacheName)
-  		.then(function (cache) {
-  			//Adding the files to cache
-  			return cache.addAll(filesToCache)
-  				.then(function () {
-  					console.log("All files are cached.");
-            return self.skipWaiting(); //To forces the waiting service worker to become the active service worker
-  				})
-  		})
-  		.catch(function (err) {
-  			console.log(err)
-  		})
-	);
+ 
+  // const Dexie = require('dexie')
+  console.log('Event: Install',Dexie);
+  // event.waitUntil(
+  // 	//Open the cache
+  // 	caches.open(cacheName)
+  // 		.then(function (cache) {
+  // 			//Adding the files to cache
+  // 			return cache.addAll(filesToCache)
+  // 				.then(function () {
+  // 					console.log("All files are cached.");
+  //           return self.skipWaiting(); //To forces the waiting service worker to become the active service worker
+  // 				})
+  // 		})
+  // 		.catch(function (err) {
+  // 			console.log(err)
+  // 		})
+	// );
 });
 
 //Adding 'activate' event listener
 self.addEventListener('activate', function (event) {
-  console.log('Event: Activate');
+  console.log('Event: Activate',Dexie);
 
   event.waitUntil( 
     caches.keys().then(function(cacheNames) {

@@ -1,7 +1,9 @@
 {
   "compilerOptions": {
     "target": "esnext",
+    // "sourceMap": true,
     "lib": [
+      // "webworker",
       "dom",
       "dom.iterable",
       "esnext"
@@ -24,5 +26,11 @@
     "jsxFactory": "h",
     "jsxImportSource": "preact"
   },
-  "include": [".eslintrc.js", "vite.config.ts","tailwind.config.ts", "src", "src/main.tsx", "service-worker.js"]
+  "include": [
+    ".eslintrc.js", 
+    "vite.config.ts",
+    "tailwind.config.ts", 
+    "src", 
+    "src/main.tsx", 
+  ]
 }

@@ -51,9 +51,9 @@ const bygonzConfig: Middleware<DBCore> = {
 * instead of one by one boilerplate:
 * this.CompletedTasks = this.table('CompletedTasks')
 */
-const addTableRefs = (dexieInstance: Dexie) => dexieInstance.tables.forEach(table => {
-  dexieInstance[table.name] = table
-})
+// const addTableRefs = (dexieInstance: Dexie) => dexieInstance.tables.forEach(table => {
+//   dexieInstance[table.name] = table
+// })
 
 export class TodoDB extends Dexie {
   // [x: string]: any
@@ -104,7 +104,7 @@ export class TodoDB extends Dexie {
       CompletedTasks: '[created+user], created, modified, user',
       // ...other tables go here...//
     })
-    addTableRefs(this)
+    // addTableRefs(this)
     this.ActiveTasks.mapToClass(Task) //   https://dexie.org/docs/Typescript#storing-real-classes-instead-of-just-interfaces
     this.CompletedTasks.mapToClass(Task)
 

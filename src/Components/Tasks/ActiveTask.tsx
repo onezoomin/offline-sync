@@ -45,15 +45,17 @@ export default function ActiveTask () {
             <IconButton onClick={() => onCheck(task)}>
               <CheckBoxOutlineBlankIcon />
             </IconButton>
+
             <Editable
-                            class="flex-grow w-2/3"
-                            text={task.task}
-                            placeholder="Write a task name"
-                            type="input"
-                            childRef={inputRef}
-                            handleOnInput = {(e: any) => handleEditTask(e, i)}
-                            onEnter = {(e: KeyboardEvent) => updateTask(task, (e.target as HTMLInputElement)?.value)}
-                        />
+                class="flex-grow w-2/3"
+                text={task.task}
+                placeholder="Write a task name"
+                type="input"
+                childRef={inputRef}
+                handleOnInput = {(e: any) => handleEditTask(e, i)}
+                onEnter = {(e: KeyboardEvent) => updateTask(task, (e.target as HTMLInputElement)?.value)}
+            />
+
             <IconButton onClick={() => onDelete(task)}>
               <DeleteForeverIcon />
             </IconButton>

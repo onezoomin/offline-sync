@@ -1,3 +1,4 @@
+import { dump } from 'js-yaml'
 import { utcTs } from '../Utils/js-utils'
 import { ModDB } from './bygonz'
 import { ModType } from './Mod'
@@ -10,6 +11,20 @@ import { ModType } from './Mod'
 const modDB = new ModDB()
 const modTable = modDB.Mods
 
+const yamlOptions = {
+  noArrayIndent: true,
+}
+export const createYamlLog = async () => {
+  const mapped = (await modDB.Mods.toArray()).map(({ modified, tableName, op, priKey, log }) => {
+    return {
+      [`${modified}__${tableName}__${op}`]: {
+        [priKey.toString()]: log,
+      },
+    }
+  })
+  const yaml = dump(mapped, yamlOptions)
+  console.log(yaml)
+}
 export const getUpdateHookForTable = (tableName) => {
   const upFx = function updHook (modifications, priKey, obj, transaction) {
   // You may use transaction to do additional database operations.
@@ -22,25 +37,26 @@ export const getUpdateHookForTable = (tableName) => {
   // object will be merged to the given modifications object.
 
     console.log(transaction)
-    const { modified: modFromChange, ...changes } = modifications
-    const prev = {}
-    for (const eachKey in changes) {
-      prev[eachKey] = obj[eachKey]
+    const { modified: modFromChange, ...put } = modifications
+    const revert = {}
+    for (const eachKey in put) {
+      revert[eachKey] = obj[eachKey]
     }
-    const modified = Math.max(modFromChange, utcTs())
+    const modified = Math.max(modFromChange || 0, utcTs())
     const modLogEntry = {
       modified,
       tableName,
       op: ModType.UPDATE,
       priKey,
       log: {
-        changes,
-        prev,
+        put,
+        revert,
       },
 
     }
     console.log('ww log mod', modLogEntry)
     void modTable.add(modLogEntry)
+    void createYamlLog()
   }
   return upFx
 }
@@ -48,7 +64,7 @@ export const getUpdateHookForTable = (tableName) => {
 export const getCreatingHookForTable = (tableName) => {
   const addFx = function addHook (priKey, obj, transaction) {
     console.log(transaction)
-    const modified = Math.max(obj.modified, utcTs())
+    const modified = Math.max(obj.modified || 0, utcTs()) // actuall NaN is mathematically greater than all numbers (thanks javascript)
     const modLogEntry = {
       modified,
       tableName,

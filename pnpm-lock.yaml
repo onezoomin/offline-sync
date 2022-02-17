@@ -38,6 +38,7 @@ importers:
       events: ^3.3.0
       isomorphic-git: ^1.11.2
       jest: ^27.5.1
+      js-yaml: ^4.1.0
       json-stable-stringify: ^1.0.1
       lodash: ^4.17.21
       mdi-preact: ^8.1.0
@@ -75,6 +76,7 @@ importers:
       diff-lines: 1.1.1
       events: 3.3.0
       isomorphic-git: 1.11.2
+      js-yaml: 4.1.0
       json-stable-stringify: 1.0.1
       lodash: 4.17.21
       mdi-preact: 8.2.0_preact@10.6.5
@@ -2684,7 +2686,6 @@ packages:
 
   /argparse/2.0.1:
     resolution: {integrity: sha512-8+9WqebbFzpX9OR+Wa6O29asIogeRMzcGtAINdpMHHyAg10f05aSFVBbcEqGf/PXw1EjAZ+q2/bEBg3DvurK3Q==}
-    dev: true
 
   /argsarray/0.0.1:
     resolution: {integrity: sha1-bnIHtOzbObCviDA/pa4ivajfYcs=}
@@ -5559,7 +5560,6 @@ packages:
     hasBin: true
     dependencies:
       argparse: 2.0.1
-    dev: true
 
   /jsdom/16.7.0:
     resolution: {integrity: sha512-u9Smc2G1USStM+s/x1ru5Sxrl6mPYCbByG1U/hUmqaVsm4tbNyS7CicOSRyuGQYZhTu0h84qkZZQ/I+dzizSVw==}

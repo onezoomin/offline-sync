@@ -28,6 +28,7 @@
     "diff-lines": "^1.1.1",
     "events": "^3.3.0",
     "isomorphic-git": "^1.11.2",
+    "js-yaml": "^4.1.0",
     "json-stable-stringify": "^1.0.1",
     "lodash": "^4.17.21",
     "mdi-preact": "^8.1.0",

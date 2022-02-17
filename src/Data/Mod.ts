@@ -1,10 +1,16 @@
 import { utcTs } from '../Utils/js-utils'
 
-export enum ModType {
+export enum Operations {
   CREATE='C',
   READ='R',
   UPDATE='U',
   DELETE='D'
+}
+export const OpCodes = {
+  C: 'CREATE',
+  R: 'READ',
+  U: 'UPDATE',
+  D: 'DELETE',
 }
 
 export class TimeStamped {
@@ -21,6 +27,7 @@ export class TimeStamped {
 export class ModOpts extends TimeStamped {
   log: Record<any, any>
   priKey: [number, string]
+  op: Operations
 
   constructor (taskOptions: ModOpts) {
     super(taskOptions)
@@ -28,7 +35,7 @@ export class ModOpts extends TimeStamped {
   }
 }
 export class Mod extends ModOpts {
-  public get type (): string {
-    return `${this.log.toString()}`
+  public get opString (): string {
+    return OpCodes[this.op]
   }
 }

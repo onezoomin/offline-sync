@@ -1,22 +1,26 @@
 import { h } from 'preact'
-import { useEffect, useState } from 'preact/hooks'
+import { MutableRef, useEffect, useState } from 'preact/hooks'
 
-const Editable = ({ text, type, placeholder, childRef, handleOnInput, onEnter, ...props }: any) => {
+const Editable = (passed: { text: string, type: string, placeholder: string, childRef: MutableRef<any>, onEnter: (e: KeyboardEvent) => void, [x: string]: any }) => {
+  const { text, type, placeholder, childRef, onEnter, ...props } = passed
   const [isEditing, setEditing] = useState(false)
 
   useEffect(() => {
-    if ((childRef ?? childRef.current) && isEditing) {
+    if (childRef?.current && isEditing) {
       childRef.current.focus()
     }
   }, [isEditing, childRef])
 
   function HandleKeyDown (event: any, type: any): void {
     const { key } = event
-    const keys = ['Tab', 'Enter']
+    const alternateSubmitKeys = ['Tab', 'Enter']
     if (type === 'input') {
       if (key === 'Escape') {
+        console.log('bailing out of editing esc')
         setEditing(false)
-      } else if (keys.includes(key) && event.target.value !== '') {
+      } else if (alternateSubmitKeys.includes(key) && event.target.value !== '') {
+        console.log('bailing out of editing ?', key)
+
         setEditing(false)
         onEnter(event)
       }
@@ -25,8 +29,10 @@ const Editable = ({ text, type, placeholder, childRef, handleOnInput, onEnter, .
 
   function handleFocus (e: any) {
     if (e.type === 'blur') {
+      console.log('bailing out of editing blur')
       setEditing(false)
     } else if (e.type === 'focus') {
+      console.log('trying to focus')
       window.scrollTo(0, 240)
     }
   }
@@ -46,7 +52,6 @@ const Editable = ({ text, type, placeholder, childRef, handleOnInput, onEnter, .
             name="task"
             placeholder={placeholder}
             value={text}
-            onInput={handleOnInput}
             onKeyDown={(e: any) => HandleKeyDown(e, type)}
             onFocus={handleFocus}
             onBlur={handleFocus}

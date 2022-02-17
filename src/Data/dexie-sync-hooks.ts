@@ -1,14 +1,14 @@
 import { dump } from 'js-yaml'
 import { utcTs } from '../Utils/js-utils'
-import { ModDB } from './bygonz'
-import { ModType } from './Mod'
+import { BygonzDB } from './bygonz'
+import { Operations } from './Mod'
 
 // TODO consider reasons DBcore is superior to the hooks API:
 // https://dexie.org/docs/DBCore/DBCore
 //   It allows the injector to perform asynchronic actions before forwarding a call.
 //   It allows the injector to take actions both before and after the forwarded call.
 //   It covers more use cases, such as when a transaction is created, allow custom index proxies etc.
-const modDB = new ModDB()
+const modDB = new BygonzDB()
 const modTable = modDB.Mods
 
 const yamlOptions = {
@@ -46,7 +46,7 @@ export const getUpdateHookForTable = (tableName) => {
     const modLogEntry = {
       modified,
       tableName,
-      op: ModType.UPDATE,
+      op: Operations.UPDATE,
       priKey,
       log: {
         put,
@@ -68,7 +68,7 @@ export const getCreatingHookForTable = (tableName) => {
     const modLogEntry = {
       modified,
       tableName,
-      op: ModType.CREATE,
+      op: Operations.CREATE,
       priKey,
       log: {
         obj,
@@ -87,7 +87,7 @@ export const getDeletingHookForTable = (tableName) => {
     const modLogEntry = {
       modified,
       tableName,
-      op: ModType.DELETE,
+      op: Operations.DELETE,
       priKey,
       log: {
         obj,

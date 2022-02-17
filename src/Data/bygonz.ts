@@ -28,7 +28,7 @@ export class ModDB extends Dexie {
     super('ModDB')
 
     this.version(1).stores({
-      Mods: '[modified+priKey], modified, priKey',
+      Mods: '[modified+tableName+op], tableName, op, modified, priKey',
       // ...other tables go here...//
     })
 

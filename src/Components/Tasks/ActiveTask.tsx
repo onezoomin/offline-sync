@@ -16,12 +16,12 @@ export default function ActiveTask () {
   const ActiveTasks = useLiveQuery(ActiveTasksQuery) ?? []
   //   const CompletedTasks = useLiveQuery(CompletedTasksQuery) ?? []
 
-  const onCheck = (index: number) => {
-    console.log(index)
-    void completeActiveTask(index)
+  const onCheck = (checkedTask: Task) => {
+    console.log(checkedTask)
+    void completeActiveTask(checkedTask)
   }
-  const onDelete = (index: number) => {
-    void delActiveTask(index)
+  const onDelete = (deletedTask: Task) => {
+    void delActiveTask(deletedTask.id)
   }
   const inputRef = useRef<any>()
 
@@ -42,7 +42,7 @@ export default function ActiveTask () {
         const id = task.id ?? i
         return (
           <div key={id} class="flex flex-wrap px-5 md:px-20">
-            <IconButton onClick={() => onCheck(id)}>
+            <IconButton onClick={() => onCheck(task)}>
               <CheckBoxOutlineBlankIcon />
             </IconButton>
             <Editable
@@ -51,10 +51,10 @@ export default function ActiveTask () {
                             placeholder="Write a task name"
                             type="input"
                             childRef={inputRef}
-                            handleOnInput = {(e: any) => handleEditTask(e, id)}
+                            handleOnInput = {(e: any) => handleEditTask(e, i)}
                             onEnter = {(e: KeyboardEvent) => updateTask(task, (e.target as HTMLInputElement)?.value)}
                         />
-            <IconButton onClick={() => onDelete(id)}>
+            <IconButton onClick={() => onDelete(task)}>
               <DeleteForeverIcon />
             </IconButton>
           </div>

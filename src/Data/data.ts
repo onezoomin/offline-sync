@@ -13,15 +13,9 @@ import { todoDB } from './dexie'
 
 export const addActiveTask = async (newTask: Task) => await todoDB.ActiveTasks.add(new Task(newTask))
 export const updateActiveTask = async (taskToUpdate: Task) => await todoDB.ActiveTasks.put(taskToUpdate)
-export const delActiveTask = async (idToDelete: number) => await todoDB.ActiveTasks.delete(idToDelete)
-export const delCompletedTask = async (idToDelete: number) => await todoDB.CompletedTasks.delete(idToDelete)
-
-export const completeActiveTask = async (idToComplete: number) => {
-  const cTask = await todoDB.ActiveTasks.get(idToComplete)
-  delete cTask?.id
-  cTask && await todoDB.CompletedTasks.add(cTask)
-  await todoDB.ActiveTasks.delete(idToComplete)
-}
+export const delActiveTask = async (idToDelete: [number, string]) => await todoDB.ActiveTasks.delete(idToDelete)
+export const delCompletedTask = async (idToDelete: [number, string]) => await todoDB.CompletedTasks.delete(idToDelete)
+export const completeActiveTask = async (cTask: Task) => cTask && await todoDB.CompletedTasks.add(cTask) && await todoDB.ActiveTasks.delete(cTask.id)
 
 export const ActiveTasksQuery = () => todoDB.ActiveTasks.toArray()
 export const CompletedTasksQuery = () => todoDB.CompletedTasks.toArray()

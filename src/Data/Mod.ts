@@ -1,5 +1,12 @@
 import { utcTs } from '../Utils/js-utils'
 
+export enum ModType {
+  CREATE='C',
+  READ='R',
+  UPDATE='U',
+  DELETE='D'
+}
+
 export class TimeStamped {
   created?: number
   modified?: number

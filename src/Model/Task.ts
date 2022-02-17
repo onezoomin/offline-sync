@@ -26,4 +26,8 @@ export class Task extends TaskOpts {
   public get short (): string {
     return `${this.task.slice(0, 20)}...`
   }
+
+  public get id (): [number, string] {
+    return [this.created ?? 0, this.user ?? ''] // awkward ts
+  }
 }

@@ -20,7 +20,7 @@ export type TaskID = [number, string]
 export class TaskObj extends TimeStamped {
   task: string
   status: TaskStatus
-  user?: string = '0x123'
+  user?: string = `0x123${Math.round(Math.random() * 222).toFixed(0)}`
 
   constructor (taskOptions: TaskObj) {
     super(taskOptions)

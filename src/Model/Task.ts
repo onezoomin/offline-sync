@@ -3,9 +3,15 @@ import { utcTs } from '../Utils/js-utils'
 import { addActiveTask } from './../Data/data'
 import { TaskStatus } from './TaskStatus'
 
-interface TimeStamped {
+export interface TimeStamped {
   created?: number
   modified?: number
+}
+export type TaskID = [number, string]
+export interface TaskObj extends TimeStamped {
+  task: string
+  status: TaskStatus
+  user?: string
 }
 
 export class TimeStampedBase<OBJ extends Record<string, any> & TimeStamped> {
@@ -18,16 +24,6 @@ export class TimeStampedBase<OBJ extends Record<string, any> & TimeStamped> {
 
     Object.assign(this, taskOptions)
   }
-
-  [x: string]: any
-}
-
-export type TaskID = [number, string]
-
-export interface TaskObj /* extends TimeStamped */ {
-  task: string
-  status: TaskStatus
-  user?: string
 }
 
 export class Task extends TimeStampedBase<TaskObj> implements TaskObj {

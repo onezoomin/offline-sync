@@ -1,6 +1,7 @@
 import { Link } from '@mui/material'
 import { ThemeProvider } from '@mui/material/styles'
 import { Image } from 'mui-image'
+import { h } from 'preact'
 import Footer from './Components/Footer'
 import { FlexRow } from './Components/Minis'
 import ActiveTask from './Components/Tasks/ActiveTask'

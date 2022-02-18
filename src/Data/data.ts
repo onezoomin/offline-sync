@@ -1,6 +1,6 @@
 import { TaskStatus } from '../Model/TaskStatus'
 import { sleep, utcTs } from '../Utils/js-utils'
-import { Task, TaskID } from './../Model/Task'
+import { Task, TaskID, TaskObj } from './../Model/Task'
 import { todoDB } from './dexie'
 
 // const getTaskStates = async function getTaskStates () {
@@ -14,7 +14,7 @@ import { todoDB } from './dexie'
 // void initRepli()
 // void initHyper() node only for now...
 
-export const addActiveTask = async (newTask: Task) => {
+export const addActiveTask = async (newTask: TaskObj) => {
   console.log('adding', newTask)
   await todoDB.ActiveTasks.add(newTask)
 }
@@ -36,8 +36,9 @@ export const mockUpdateStreamer = async () => {
   while (eventCount++ < maxUpdates) {
     let key
     const task = `random ${(Math.random() * 20000).toFixed(2)}`
-    if (Math.random() >= 0.3) {
-      key = ((await tableRef.toArray())[0]).id
+    const taskArray = await tableRef.toArray()
+    if (Math.random() >= 0.3 && taskArray.length) {
+      key = (taskArray[Math.floor(Math.random() * taskArray.length)] as Task)?.id
       await tableRef.update(key, { task, modified: utcTs() })
     } else {
       await tableRef.add(new Task({ task, status: TaskStatus.Active }))

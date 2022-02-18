@@ -2,6 +2,7 @@ import Dexie, { DBCore, Middleware } from 'dexie'
 import { Task, TaskID } from '../Model/Task'
 import { initialActiveTasks, initialCompletedTasks } from '../Model/Tasks'
 import { utcTs } from '../Utils/js-utils'
+import { TaskObj } from './../Model/Task'
 import { getCreatingHookForTable, getDeletingHookForTable, getUpdateHookForTable } from './dexie-sync-hooks'
 // import { registerSyncProtocol } from './dexie-sync-ajax'
 import { mode, msg } from './workerImport'
@@ -59,8 +60,8 @@ export class TodoDB extends Dexie {
   // [x: string]: any
   // Declare implicit table properties. (just to inform Typescript. Instanciated by Dexie in stores() method)
   // Task | TaskObj allows for partial objects to be used in add and put and for the class to include getters
-  ActiveTasks: Dexie.Table<Task, TaskID> // TaskID = type of the priKey
-  CompletedTasks: Dexie.Table<Task, TaskID>
+  ActiveTasks: Dexie.Table<TaskObj, TaskID> // TaskID = type of the priKey
+  CompletedTasks: Dexie.Table<TaskObj, TaskID>
   // ...other tables go here...
   static singletonInstance: TodoDB
 

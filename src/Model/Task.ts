@@ -16,7 +16,7 @@ export class TimeStampedBase {
   created: number
   modified: number
 
-  constructor (obj: Record<string, any>) {
+  constructor (obj: any) { // Record<string, any>
     obj.created = obj.created ?? utcTs()
     obj.modified = obj.modified ?? obj.created
 
@@ -28,6 +28,11 @@ export class Task extends TimeStampedBase {
   task: string
   status: TaskStatus
   user?: string = `0x123${Math.round(Math.random() * 222).toFixed(0)}`
+
+  constructor (obj: TaskObj) { // Record<string, any>
+    super(obj)
+    Object.assign(this, obj)
+  }
 
   public get short (): string {
     return `${this.task.slice(0, 20)}...`

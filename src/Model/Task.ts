@@ -29,7 +29,7 @@ export class TimeStampedBase<OBJ extends Record<string, any> & TimeStamped> {
 export class Task extends TimeStampedBase<TaskObj> implements TaskObj {
   task: string
   status: TaskStatus
-  user?: string = '0x123'
+  user?: string = `0x123${Math.round(Math.random() * 222).toFixed(0)}`
 
   public get short (): string {
     return `${this.task.slice(0, 20)}...`

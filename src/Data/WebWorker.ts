@@ -2,7 +2,6 @@ import Dexie, { DBCore, Middleware } from 'dexie'
 import { Task } from '../Model/Task'
 import { initialActiveTasks, initialCompletedTasks } from '../Model/Tasks'
 import { utcTs } from '../Utils/js-utils'
-import { TaskObj } from './../Model/Task'
 import { getCreatingHookForTable, getDeletingHookForTable, getUpdateHookForTable } from './dexie-sync-hooks'
 // import { registerSyncProtocol } from './dexie-sync-ajax'
 import { mode, msg } from './workerImport'
@@ -60,8 +59,8 @@ export class TodoDB extends Dexie {
   // [x: string]: any
   // Declare implicit table properties. (just to inform Typescript. Instanciated by Dexie in stores() method)
   // Task | TaskObj allows for partial objects to be used in add and put and for the class to include getters
-  ActiveTasks: Dexie.Table<Task | TaskObj, [number, string]> // [number, string] = type of the priKey
-  CompletedTasks: Dexie.Table<Task | TaskObj, [number, string]>
+  ActiveTasks: Dexie.Table<Task, [number, string]> // TaskID = type of the priKey
+  CompletedTasks: Dexie.Table<Task, TaskID>
   // ...other tables go here...
   static singletonInstance: TodoDB
 
@@ -137,6 +136,7 @@ async function getDB () {
 
 void getDB()
 
+let counter = 0
 self.onmessage = (e) => {
   if (e.data === 'ping') {
     self.postMessage({ msg: `${msg} - ${counter++}`, mode })

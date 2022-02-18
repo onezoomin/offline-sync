@@ -14,6 +14,9 @@ export class TimeStamped {
     Object.assign(this, taskOptions)
   }
 }
+
+export type TaskID = [number, string]
+
 export class TaskObj extends TimeStamped {
   task: string
   status: TaskStatus
@@ -29,7 +32,7 @@ export class Task extends TaskObj {
     return `${this.task.slice(0, 20)}...`
   }
 
-  public get id (): [number, string] {
+  public get id (): TaskID {
     return [this.created ?? 0, this.user ?? ''] // awkward ts
   }
 

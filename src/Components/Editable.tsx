@@ -16,11 +16,8 @@ const Editable = (passed: { text: string, type: string, placeholder: string, chi
     const alternateSubmitKeys = ['Tab', 'Enter']
     if (type === 'input') {
       if (key === 'Escape') {
-        console.log('bailing out of editing esc')
         setEditing(false)
       } else if (alternateSubmitKeys.includes(key) && event.target.value !== '') {
-        console.log('bailing out of editing ?', key)
-
         setEditing(false)
         onEnter(event)
       }
@@ -29,7 +26,6 @@ const Editable = (passed: { text: string, type: string, placeholder: string, chi
 
   function handleFocus (e: any) {
     if (e.type === 'blur') {
-      console.log('bailing out of editing blur')
       setEditing(false)
     } else if (e.type === 'focus') {
       console.log('trying to focus')

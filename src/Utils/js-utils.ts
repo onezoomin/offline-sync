@@ -36,3 +36,5 @@ export function styledConsoleLog (...args) {
 
   console.log.apply(console, argArray)
 }
+
+export const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))

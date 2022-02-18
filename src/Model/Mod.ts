@@ -17,24 +17,25 @@ export class TimeStamped {
   created?: number
   modified?: number
 
-  constructor (taskOptions: TimeStamped) {
-    taskOptions.created = taskOptions.created ?? utcTs()
-    taskOptions.modified = taskOptions.modified ?? taskOptions.created
+  constructor (obj: TimeStamped) {
+    obj.created = obj.created ?? utcTs()
+    obj.modified = obj.modified ?? obj.created
 
-    Object.assign(this, taskOptions)
+    Object.assign(this, obj)
   }
 }
-export class ModOpts extends TimeStamped {
+export class ModObj extends TimeStamped {
   log: Record<any, any>
   priKey: [number, string]
+  tableName: string
   op: Operations
 
-  constructor (taskOptions: ModOpts) {
-    super(taskOptions)
-    Object.assign(this, taskOptions)
+  constructor (obj: ModObj) {
+    super(obj)
+    Object.assign(this, obj)
   }
 }
-export class Mod extends ModOpts {
+export class Mod extends ModObj {
   public get opString (): string {
     return OpCodes[this.op]
   }

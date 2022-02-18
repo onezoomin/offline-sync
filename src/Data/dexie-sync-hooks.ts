@@ -1,8 +1,11 @@
+import format from 'date-fns/format'
+import fromUnixTime from 'date-fns/fromUnixTime'
+import getMinutes from 'date-fns/getMinutes'
+import set from 'date-fns/set'
 import { dump } from 'js-yaml'
+import { Operations } from '../Model/Mod'
 import { utcTs } from '../Utils/js-utils'
-import { BygonzDB } from './bygonz'
-import { Operations } from './Mod'
-
+import { BygonzDB, EpochDB } from './bygonz'
 // TODO consider reasons DBcore is superior to the hooks API:
 // https://dexie.org/docs/DBCore/DBCore
 //   It allows the injector to perform asynchronic actions before forwarding a call.
@@ -11,19 +14,31 @@ import { Operations } from './Mod'
 const modDB = new BygonzDB()
 const modTable = modDB.Mods
 
+const minuteEpochDB = new EpochDB(6000, 'Minute')
+const minutesTable = minuteEpochDB.Epochs
+
 const yamlOptions = {
   noArrayIndent: true,
 }
 export const createYamlLog = async () => {
-  const mapped = (await modDB.Mods.toArray()).map(({ modified, tableName, op, priKey, log }) => {
+  const nownow = utcTs()
+  const nowDate = fromUnixTime(nownow / 1000)
+  const nextMinute = set(nowDate, { minutes: getMinutes(nowDate) + 1, seconds: 0, milliseconds: 0 }).getTime()
+  const thisMinute = set(nowDate, { minutes: getMinutes(nowDate), seconds: 0, milliseconds: 0 }).getTime()
+  const mapped = (await modDB.Mods.where('modified').above(thisMinute).toArray()).map(({ modified, tableName, op, priKey, log }) => {
     return {
       [`${modified}__${tableName}__${op}`]: {
         [priKey.toString()]: log,
       },
     }
   })
-  const yaml = dump(mapped, yamlOptions)
-  console.log(yaml)
+  const yaml = dump({ [thisMinute.toFixed(0)]: mapped }, yamlOptions)
+
+  const msUntilEpoch = nextMinute - nownow
+  if (msUntilEpoch < 10000) console.log('finish Epoch', thisMinute)
+
+  void minutesTable.put({ ts: thisMinute, data: yaml })
+  console.log(yaml, format(thisMinute, 'H:mm:ss:SSS'), 'next epoch in', msUntilEpoch)
 }
 export const getUpdateHookForTable = (tableName) => {
   const upFx = function updHook (modifications, priKey, obj, transaction) {
@@ -76,6 +91,7 @@ export const getCreatingHookForTable = (tableName) => {
     }
     console.log('ww log add', modLogEntry)
     void modTable.add(modLogEntry)
+    void createYamlLog()
   }
   return addFx
 }
@@ -95,6 +111,7 @@ export const getDeletingHookForTable = (tableName) => {
     }
     console.log('ww log del', modLogEntry)
     void modTable.add(modLogEntry)
+    void createYamlLog()
   }
   return delFx
 }

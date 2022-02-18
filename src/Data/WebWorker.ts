@@ -2,6 +2,7 @@ import Dexie, { DBCore, Middleware } from 'dexie'
 import { Task } from '../Model/Task'
 import { initialActiveTasks, initialCompletedTasks } from '../Model/Tasks'
 import { utcTs } from '../Utils/js-utils'
+import { TaskObj } from './../Model/Task'
 import { getCreatingHookForTable, getDeletingHookForTable, getUpdateHookForTable } from './dexie-sync-hooks'
 // import { registerSyncProtocol } from './dexie-sync-ajax'
 import { mode, msg } from './workerImport'
@@ -58,15 +59,16 @@ const bygonzConfig: Middleware<DBCore> = {
 export class TodoDB extends Dexie {
   // [x: string]: any
   // Declare implicit table properties. (just to inform Typescript. Instanciated by Dexie in stores() method)
-  ActiveTasks: Dexie.Table<Task, [number, string]> // [number, string] = type of the priKey
-  CompletedTasks: Dexie.Table<Task, [number, string]>
+  // Task | TaskObj allows for partial objects to be used in add and put and for the class to include getters
+  ActiveTasks: Dexie.Table<Task | TaskObj, [number, string]> // [number, string] = type of the priKey
+  CompletedTasks: Dexie.Table<Task | TaskObj, [number, string]>
   // ...other tables go here...
   static singletonInstance: TodoDB
 
   async init () {
-    await this.use(bygonzConfig)
+    this.use(bygonzConfig)
 
-    for (const { name: eachTableName } of await this.tables) {
+    for (const { name: eachTableName } of this.tables) {
       this[eachTableName].hook('updating', getUpdateHookForTable(eachTableName))
       this[eachTableName].hook('creating', getCreatingHookForTable(eachTableName))
       this[eachTableName].hook('deleting', getDeletingHookForTable(eachTableName))

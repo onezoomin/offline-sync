@@ -10,7 +10,8 @@ export default function AddTasks () {
   function onSubmit (e: any) {
     e.preventDefault()
     e.target.reset()
-    void addActiveTask(new Task({ task: inputValue, status: TaskStatus.Active }))
+    const t = new Task({ task: inputValue, status: TaskStatus.Active })
+    void addActiveTask(t)
     setInputValue('')
   }
   function addInputChange (task: string) {

@@ -16,7 +16,7 @@ import { todoDB } from './dexie'
 
 export const addActiveTask = async (newTask: Task) => {
   console.log('adding', newTask)
-  await todoDB.ActiveTasks.add(new Task(newTask))
+  await todoDB.ActiveTasks.add(newTask)
 }
 export const updateActiveTask = async (taskToUpdate: Task) => await todoDB.ActiveTasks.put(new Task({ ...taskToUpdate, modified: utcTs() }))
 export const delActiveTask = async (idToDelete: TaskID) => await todoDB.ActiveTasks.delete(idToDelete)

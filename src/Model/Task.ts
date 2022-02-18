@@ -3,30 +3,28 @@ import { utcTs } from '../Utils/js-utils'
 import { addActiveTask } from './../Data/data'
 import { TaskStatus } from './TaskStatus'
 
-export interface TimeStamped {
+export type TaskID = [number, string]
+export interface TaskObj {
   created?: number
   modified?: number
-}
-export type TaskID = [number, string]
-export interface TaskObj extends TimeStamped {
   task: string
   status: TaskStatus
   user?: string
 }
 
-export class TimeStampedBase<OBJ extends Record<string, any> & TimeStamped> {
+export class TimeStampedBase {
   created: number
   modified: number
 
-  constructor (taskOptions: OBJ) {
-    taskOptions.created = taskOptions.created ?? utcTs()
-    taskOptions.modified = taskOptions.modified ?? taskOptions.created
+  constructor (obj: Record<string, any>) {
+    obj.created = obj.created ?? utcTs()
+    obj.modified = obj.modified ?? obj.created
 
-    Object.assign(this, taskOptions)
+    Object.assign(this, obj)
   }
 }
 
-export class Task extends TimeStampedBase<TaskObj> implements TaskObj {
+export class Task extends TimeStampedBase {
   task: string
   status: TaskStatus
   user?: string = `0x123${Math.round(Math.random() * 222).toFixed(0)}`

@@ -22,7 +22,7 @@
     "noEmit": true,
     "strictNullChecks": true,
     "importHelpers": true,
-    "jsx": "react-jsx",
+    "jsx": "react",
     "jsxFactory": "h",
     "jsxImportSource": "preact"
   },

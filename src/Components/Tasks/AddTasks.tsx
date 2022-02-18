@@ -1,6 +1,7 @@
 import { h } from 'preact'
 import { useState } from 'preact/hooks'
 import { addActiveTask } from '../../Data/data'
+import { Task } from '../../Model/Task'
 import { TaskStatus } from '../../Model/TaskStatus'
 
 export default function AddTasks () {
@@ -9,7 +10,7 @@ export default function AddTasks () {
   function onSubmit (e: any) {
     e.preventDefault()
     e.target.reset()
-    void addActiveTask({ task: inputValue, status: TaskStatus.Active })
+    void addActiveTask(new Task({ task: inputValue, status: TaskStatus.Active }))
     setInputValue('')
   }
   function addInputChange (task: string) {

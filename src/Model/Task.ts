@@ -1,4 +1,6 @@
+import { completeActiveTask } from '../Data/data'
 import { utcTs } from '../Utils/js-utils'
+import { addActiveTask } from './../Data/data'
 import { TaskStatus } from './TaskStatus'
 
 export class TimeStamped {
@@ -29,5 +31,19 @@ export class Task extends TaskObj {
 
   public get id (): [number, string] {
     return [this.created ?? 0, this.user ?? ''] // awkward ts
+  }
+
+  // experimenting with the pattern that an object can be empowered to influence the datamodel
+  // mixture of separation of concerns and convenience,
+  // as the functions that are actually data layer aware (eg dexieDB) are imported here
+  // and offered as viewModel style convenience methods
+  public complete () {
+    void completeActiveTask(this)
+  }
+
+  public commit () {
+    if (this.status === TaskStatus.Active) {
+      void addActiveTask(this)
+    }
   }
 }

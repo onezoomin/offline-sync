@@ -1,8 +1,8 @@
 import Dexie, { DBCore, Middleware } from 'dexie'
-import { Task, TaskID } from '../Model/Task'
+import { CompoundKeyNumStr, TaskVM } from '../Model/Task'
 import { initialActiveTasks, initialCompletedTasks } from '../Model/Tasks'
 import { utcTs } from '../Utils/js-utils'
-import { TaskObj } from './../Model/Task'
+import { TaskParams } from './../Model/Task'
 import { getCreatingHookForTable, getDeletingHookForTable, getUpdateHookForTable } from './dexie-sync-hooks'
 // import { registerSyncProtocol } from './dexie-sync-ajax'
 import { mode, msg } from './workerImport'
@@ -60,8 +60,8 @@ export class TodoDB extends Dexie {
   // [x: string]: any
   // Declare implicit table properties. (just to inform Typescript. Instanciated by Dexie in stores() method)
   // Task | TaskObj allows for partial objects to be used in add and put and for the class to include getters
-  ActiveTasks: Dexie.Table<TaskObj, TaskID> // TaskID = type of the priKey
-  CompletedTasks: Dexie.Table<TaskObj, TaskID>
+  ActiveTasks: Dexie.Table<TaskParams, CompoundKeyNumStr> // TaskID = type of the priKey
+  CompletedTasks: Dexie.Table<TaskParams, CompoundKeyNumStr>
   // ...other tables go here...
   static singletonInstance: TodoDB
 
@@ -107,8 +107,8 @@ export class TodoDB extends Dexie {
       // ...other tables go here...//
     })
     // addTableRefs(this)
-    this.ActiveTasks.mapToClass(Task) //   https://dexie.org/docs/Typescript#storing-real-classes-instead-of-just-interfaces
-    this.CompletedTasks.mapToClass(Task)
+    this.ActiveTasks.mapToClass(TaskVM) //   https://dexie.org/docs/Typescript#storing-real-classes-instead-of-just-interfaces
+    this.CompletedTasks.mapToClass(TaskVM)
 
     // this.syncable.connect(
     //   'todo_sync_protocol',

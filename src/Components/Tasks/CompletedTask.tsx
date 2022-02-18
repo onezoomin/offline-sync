@@ -3,12 +3,12 @@ import IconButton from '@mui/material/IconButton'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { h } from 'preact'
 import { CompletedTasksQuery, delCompletedTask } from '../../Data/data'
-import { TaskID } from '../../Model/Task'
+import { CompoundKeyNumStr } from '../../Model/Task'
 
 export default function CompletedTask () {
   const CompletedTasks = useLiveQuery(CompletedTasksQuery) ?? []
 
-  const onDelete = (index: TaskID) => {
+  const onDelete = (index: CompoundKeyNumStr) => {
     void delCompletedTask(index)
   }
 

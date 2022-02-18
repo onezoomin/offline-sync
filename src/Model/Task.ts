@@ -3,42 +3,41 @@ import { utcTs } from '../Utils/js-utils'
 import { addActiveTask } from './../Data/data'
 import { TaskStatus } from './TaskStatus'
 
-export type TaskID = [number, string]
-export interface TaskObj {
+export type CompoundKeyNumStr = [number, string]
+
+export interface TaskParams {
   created?: number
+  user?: string
+
   modified?: number
   task: string
   status: TaskStatus
-  user?: string
 }
-
 export class TimeStampedBase {
-  created: number
-  modified: number
+  created: number = utcTs()
+  modified: number = this.created
 
-  constructor (obj: any) { // Record<string, any>
-    obj.created = obj.created ?? utcTs()
-    obj.modified = obj.modified ?? obj.created
-
+  constructor (obj: any) {
     Object.assign(this, obj)
   }
 }
 
 export class Task extends TimeStampedBase {
   task: string
-  status: TaskStatus
-  user?: string = `0x123${Math.round(Math.random() * 222).toFixed(0)}`
+  status: TaskStatus = TaskStatus.Active
+  user: string = `0x123${Math.round(Math.random() * 222).toFixed(0)}`
 
-  constructor (obj: TaskObj) { // Record<string, any>
+  constructor (obj: TaskParams) {
     super(obj)
     Object.assign(this, obj)
   }
-
+}
+export class TaskVM extends Task {
   public get short (): string {
     return `${this.task.slice(0, 20)}...`
   }
 
-  public get id (): TaskID {
+  public get id (): CompoundKeyNumStr {
     return [this.created, this.user ?? ''] // awkward ts
   }
 

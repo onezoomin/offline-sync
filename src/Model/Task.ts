@@ -3,37 +3,44 @@ import { utcTs } from '../Utils/js-utils'
 import { addActiveTask } from './../Data/data'
 import { TaskStatus } from './TaskStatus'
 
-export class TimeStamped {
+interface TimeStamped {
   created?: number
   modified?: number
+}
 
-  constructor (taskOptions: TaskObj) {
+export class TimeStampedBase<OBJ extends Record<string, any> & TimeStamped> {
+  created: number
+  modified: number
+
+  constructor (taskOptions: OBJ) {
     taskOptions.created = taskOptions.created ?? utcTs()
     taskOptions.modified = taskOptions.modified ?? taskOptions.created
 
     Object.assign(this, taskOptions)
   }
+
+  [x: string]: any
 }
 
 export type TaskID = [number, string]
 
-export class TaskObj extends TimeStamped {
+export interface TaskObj /* extends TimeStamped */ {
+  task: string
+  status: TaskStatus
+  user?: string
+}
+
+export class Task extends TimeStampedBase<TaskObj> implements TaskObj {
   task: string
   status: TaskStatus
   user?: string = `0x123${Math.round(Math.random() * 222).toFixed(0)}`
 
-  constructor (taskOptions: TaskObj) {
-    super(taskOptions)
-    Object.assign(this, taskOptions)
-  }
-}
-export class Task extends TaskObj {
   public get short (): string {
     return `${this.task.slice(0, 20)}...`
   }
 
   public get id (): TaskID {
-    return [this.created ?? 0, this.user ?? ''] // awkward ts
+    return [this.created, this.user ?? ''] // awkward ts
   }
 
   // experimenting with the pattern that an object can be empowered to influence the datamodel

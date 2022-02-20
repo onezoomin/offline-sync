@@ -1,6 +1,6 @@
 import Dexie from 'dexie'
 import { EpochClass, EpochObj } from '../Model/Epoch'
-import { Mod } from '../Model/Mod'
+import { ModVM } from '../Model/Mod'
 import { ModObj } from './../Model/Mod'
 
 // const addTableRefs = (dexieInstance: Dexie) => dexieInstance.tables.forEach(table => {
@@ -10,7 +10,7 @@ import { ModObj } from './../Model/Mod'
 export class BygonzDB extends Dexie {
   // [x: string]: any
   // Declare implicit table properties. (just to inform Typescript. Instanciated by Dexie in stores() method)
-  Mods: Dexie.Table<Mod | ModObj, [number, string]> // number = type of the priKey
+  Mods: Dexie.Table<ModVM | ModObj, [number, string]> // number = type of the priKey
   // ...other tables go here...
   static singletonInstance: BygonzDB
 
@@ -35,9 +35,10 @@ export class BygonzDB extends Dexie {
     })
 
     // addTableRefs(this)
-    this.Mods.mapToClass(Mod) //   https://dexie.org/docs/Typescript#storing-real-classes-instead-of-just-interfaces
+    this.Mods.mapToClass(ModVM) //   https://dexie.org/docs/Typescript#storing-real-classes-instead-of-just-interfaces
   }
 }
+export const modDB = new BygonzDB()
 export class EpochDB extends Dexie {
   // [x: string]: any
   // Declare implicit table properties. (just to inform Typescript. Instanciated by Dexie in stores() method)

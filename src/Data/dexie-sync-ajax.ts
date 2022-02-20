@@ -109,7 +109,7 @@ const initialSyncPayload = {
         task: 'init task1',
         status: 'Active',
         ts: 1644768021903,
-        user: '0x123',
+        owner: '0x123',
       },
     },
     {
@@ -123,7 +123,7 @@ const initialSyncPayload = {
         task: 'init task2',
         status: 'Active',
         ts: 1644768021903.3,
-        user: '0x123',
+        owner: '0x123',
       },
     },
     {
@@ -137,7 +137,7 @@ const initialSyncPayload = {
         task: 'finished task1',
         status: 'Completed',
         ts: 1644768021903.5,
-        user: '0x123',
+        owner: '0x123',
       },
     },
   ],

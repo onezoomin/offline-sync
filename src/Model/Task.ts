@@ -1,13 +1,19 @@
+import { Wallet } from '@ethersproject/wallet'
 import { completeActiveTask } from '../Data/data'
 import { utcTs } from '../Utils/js-utils'
 import { addActiveTask } from './../Data/data'
+import { ModObj, ModVM } from './Mod'
 import { TaskStatus } from './TaskStatus'
+
+export const userWallet = Wallet.createRandom()
+export const userAddress = userWallet.address
+console.log('Wallet for this session =', userAddress, userWallet._mnemonic)
 
 export type CompoundKeyNumStr = [number, string]
 
 export interface TaskParams {
   created?: number
-  user?: string
+  owner?: string
 
   modified?: number
   task: string
@@ -25,9 +31,10 @@ export class TimeStampedBase {
 export class Task extends TimeStampedBase {
   task: string
   status: TaskStatus = TaskStatus.Active
-  user: string = `0x123${Math.round(Math.random() * 222).toFixed(0)}`
+  owner: string
 
   constructor (obj: TaskParams) {
+    obj.owner = obj.owner ?? userAddress
     super(obj)
     Object.assign(this, obj)
   }
@@ -37,8 +44,16 @@ export class TaskVM extends Task {
     return `${this.task.slice(0, 20)}...`
   }
 
+  static getCompoundKey (obj: Task): CompoundKeyNumStr {
+    return [obj.created, obj.owner ?? ''] // awkward ts
+  }
+
   public get id (): CompoundKeyNumStr {
-    return [this.created, this.user ?? ''] // awkward ts
+    return TaskVM.getCompoundKey(this)
+  }
+
+  public async getModArray (): Promise<Array<ModVM | ModObj>> {
+    return await ModificationsQuery(this.id)
   }
 
   // experimenting with the pattern that an object can be empowered to influence the datamodel

@@ -1,0 +1,7 @@
+type Task {
+  modified: Int64
+  created: Int64
+  user: String @search(by: [fulltext])
+  task: String @search(by: [fulltext])
+  status: String
+}

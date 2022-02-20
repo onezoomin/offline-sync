@@ -1,17 +1,19 @@
+import axios from 'axios'
 import format from 'date-fns/format'
 import fromUnixTime from 'date-fns/fromUnixTime'
 import getMinutes from 'date-fns/getMinutes'
 import set from 'date-fns/set'
 import { dump } from 'js-yaml'
 import { Operations } from '../Model/Mod'
+import { TaskVM } from '../Model/Task'
 import { utcTs } from '../Utils/js-utils'
-import { BygonzDB, EpochDB } from './bygonz'
+import { EpochDB, modDB } from './bygonz'
 // TODO consider reasons DBcore is superior to the hooks API:
 // https://dexie.org/docs/DBCore/DBCore
 //   It allows the injector to perform asynchronic actions before forwarding a call.
 //   It allows the injector to take actions both before and after the forwarded call.
 //   It covers more use cases, such as when a transaction is created, allow custom index proxies etc.
-const modDB = new BygonzDB()
+
 const modTable = modDB.Mods
 
 const minuteEpochDB = new EpochDB(6000, 'Minute')
@@ -39,6 +41,71 @@ export const createYamlLog = async () => {
 
   void minutesTable.put({ ts: thisMinute, data: yaml })
   console.log(yaml, format(thisMinute, 'H:mm:ss:SSS'), 'next epoch in', msUntilEpoch)
+}
+
+export const dgraphUpsert = async (task) => {
+  let response
+  task.key = JSON.stringify(TaskVM.getCompoundKey(task))
+  console.log('task obj:\n', task)
+  console.time('sendTask')
+  const data = {
+    query: `mutation ($task: [AddTaskInput!]!) {
+      addTask(input: $task, upsert: true) {
+        task {
+          key
+          created
+          owner
+          modified
+          task
+          status
+        }
+      }
+    }`,
+    variables: {
+      task,
+    },
+  }
+  try {
+    response = await axios({
+      method: 'post',
+      url: 'https://dghttp.zt.ax/graphql',
+      data,
+      headers: { 'Content-Type': 'application/json' },
+    })
+    if (response.data.errors) {
+      console.log(response)
+      throw new Error(response.data.errors[0].message)
+    } else {
+      console.log(response.data)
+    }
+  } catch (e) {
+    console.warn(e)
+  }
+  console.timeEnd('sendTask')
+}
+export const n8nUpsert = async (task) => {
+  let response
+  task.key = JSON.stringify(TaskVM.getCompoundKey(task))
+  console.log('task obj to n8n:\n', task)
+  console.time('sendTask')
+  const data = { task }
+  try {
+    response = await axios({
+      method: 'post',
+      url: ' https://wh.n8n.zt.ax/webhook/dexie-dgraph',
+      data,
+      headers: { 'Content-Type': 'application/json' },
+    })
+    if (response.data.errors) {
+      console.log(response)
+      throw new Error(response.data.errors[0].message)
+    } else {
+      console.log(response.data)
+    }
+  } catch (e) {
+    console.warn(e)
+  }
+  console.timeEnd('sendTask')
 }
 export const getUpdateHookForTable = (tableName) => {
   const upFx = function updHook (modifications, priKey, obj, transaction) {
@@ -71,6 +138,7 @@ export const getUpdateHookForTable = (tableName) => {
     }
     console.log('ww log mod', modLogEntry)
     void modTable.add(modLogEntry)
+    void n8nUpsert({ ...obj, ...modifications })
     void createYamlLog()
   }
   return upFx
@@ -92,6 +160,8 @@ export const getCreatingHookForTable = (tableName) => {
     console.log('ww log add', modLogEntry)
     void modTable.add(modLogEntry)
     void createYamlLog()
+    void n8nUpsert(obj)
+    // void dgraphUpsert(obj)
   }
   return addFx
 }

@@ -1,6 +1,7 @@
 import { TaskStatus } from '../Model/TaskStatus'
 import { sleep, utcTs } from '../Utils/js-utils'
-import { CompoundKeyNumStr, Task, TaskParams, TaskVM } from './../Model/Task'
+import { CompoundKeyNumStr, Task, TaskParams, TaskVM, userAddress } from './../Model/Task'
+import { modDB } from './bygonz'
 import { todoDB } from './dexie'
 
 // const getTaskStates = async function getTaskStates () {
@@ -23,10 +24,11 @@ export const delActiveTask = async (idToDelete: CompoundKeyNumStr) => await todo
 export const delCompletedTask = async (idToDelete: CompoundKeyNumStr) => await todoDB.CompletedTasks.delete(idToDelete)
 export const completeActiveTask = async (cTask: Task) => cTask
   && (await todoDB.CompletedTasks.add(new Task({ ...cTask, status: TaskStatus.Completed, modified: utcTs() })))
-  && (await todoDB.ActiveTasks.delete(cTask.id))
+  && (await todoDB.ActiveTasks.delete((cTask as TaskVM).id))
 
 export const ActiveTasksQuery = () => todoDB.ActiveTasks.toArray()
 export const CompletedTasksQuery = () => todoDB.CompletedTasks.toArray()
+export const ModificationsQuery = (key: CompoundKeyNumStr = [0, '']) => modDB.Mods.where('priKey').equals(key).toArray()
 
 export const mockUpdateStreamer = async () => {
   let eventCount = 0
@@ -35,7 +37,7 @@ export const mockUpdateStreamer = async () => {
 
   while (eventCount++ < maxUpdates) {
     let key
-    const task = `random ${(Math.random() * 20000).toFixed(2)}`
+    const task = `${userAddress.slice(0, 5)} random ${(Math.random() * 20000).toFixed(2)}`
     const taskArray = await tableRef.toArray()
     if (Math.random() >= 0.3 && taskArray.length) {
       key = (taskArray[Math.floor(Math.random() * taskArray.length)] as TaskVM)?.id

@@ -13,6 +13,7 @@
   "dependencies": {
     "@emotion/react": "^11.7.1",
     "@emotion/styled": "^11.3.0",
+    "@ethersproject/wallet": "^5.5.0",
     "@isomorphic-git/lightning-fs": "^4.4.1",
     "@mui/icons-material": "^5.4.1",
     "@mui/material": "^5.4.1",

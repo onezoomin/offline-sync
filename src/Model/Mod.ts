@@ -1,4 +1,5 @@
 import { utcTs } from '../Utils/js-utils'
+import { CompoundKeyNumStr } from './Task'
 
 export enum Operations {
   CREATE='C',
@@ -26,7 +27,7 @@ export class TimeStamped {
 }
 export class ModObj extends TimeStamped {
   log: Record<any, any>
-  priKey: [number, string]
+  priKey: CompoundKeyNumStr
   tableName: string
   op: Operations
 
@@ -35,7 +36,7 @@ export class ModObj extends TimeStamped {
     Object.assign(this, obj)
   }
 }
-export class Mod extends ModObj {
+export class ModVM extends ModObj {
   public get opString (): string {
     return OpCodes[this.op]
   }

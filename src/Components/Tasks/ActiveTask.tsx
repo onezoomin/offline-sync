@@ -4,10 +4,16 @@ import { IconButton } from '@mui/material'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { h } from 'preact'
 import { useRef } from 'preact/hooks'
-import { ActiveTasksQuery, completeActiveTask, delActiveTask, updateActiveTask } from '../../Data/data'
-import { Task } from '../../Model/Task'
+import { ActiveTasksQuery, completeActiveTask, delActiveTask, ModificationsQuery, updateActiveTask } from '../../Data/data'
+import { Task, TaskVM } from '../../Model/Task'
 import Editable from '../Editable'
 
+function TaskMods ({ task: { id } }) {
+  const mods = useLiveQuery(() => ModificationsQuery(id)) ?? []
+  return (
+    !mods.length ? null : <div>{mods.length}</div>
+  )
+}
 export default function ActiveTask () {
   const ActiveTasks = useLiveQuery(ActiveTasksQuery) ?? []
 
@@ -15,7 +21,7 @@ export default function ActiveTask () {
     console.log(checkedTask)
     void completeActiveTask(checkedTask)
   }
-  const onDelete = (deletedTask: Task) => {
+  const onDelete = (deletedTask: TaskVM) => {
     void delActiveTask(deletedTask.id)
   }
   const inputRef = useRef<any>()
@@ -27,7 +33,7 @@ export default function ActiveTask () {
 
   return (
     <div class="container overflow-y:auto mx-auto mb-5">
-      {ActiveTasks?.map((task, i) => {
+      {ActiveTasks?.map((task: TaskVM, i) => {
         const id = task.id ?? i
         return (
           <div key={id} class="flex flex-wrap px-5 md:px-20">
@@ -43,7 +49,7 @@ export default function ActiveTask () {
                 childRef={inputRef}
                 onEnter = {(e: KeyboardEvent) => updateTask(task, (e.target as HTMLInputElement)?.value)}
             />
-
+            <TaskMods {...{ task }} />
             <IconButton onClick={() => onDelete(task)}>
               <DeleteForeverIcon />
             </IconButton>

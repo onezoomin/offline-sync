@@ -57,12 +57,12 @@ const bygonzConfig: Middleware<DBCore> = {
 // })
 
 export class TodoDB extends Dexie {
-  // [x: string]: any
   // Declare implicit table properties. (just to inform Typescript. Instanciated by Dexie in stores() method)
-  // Task | TaskObj allows for partial objects to be used in add and put and for the class to include getters
-  ActiveTasks: Dexie.Table<TaskParams, CompoundKeyNumStr> // TaskID = type of the priKey
-  CompletedTasks: Dexie.Table<TaskParams, CompoundKeyNumStr>
+  // TaskParams | TaskVM allows for partial objects to be used in add and put and for the class to include getters
+  ActiveTasks: Dexie.Table<TaskParams | TaskVM, CompoundKeyNumStr> // TaskID = type of the priKey
+  CompletedTasks: Dexie.Table<TaskParams | TaskVM, CompoundKeyNumStr>
   // ...other tables go here...
+
   static singletonInstance: TodoDB
 
   async init () {
@@ -102,8 +102,8 @@ export class TodoDB extends Dexie {
     // })
 
     this.version(1).stores({
-      ActiveTasks: '[created+user], created, modified, user',
-      CompletedTasks: '[created+user], created, modified, user',
+      ActiveTasks: '[created+owner], created, modified, owner',
+      CompletedTasks: '[created+owner], created, modified, owner',
       // ...other tables go here...//
     })
     // addTableRefs(this)

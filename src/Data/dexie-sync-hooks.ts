@@ -29,7 +29,7 @@ export const createYamlLog = async () => {
   const thisMinute = set(nowDate, { minutes: getMinutes(nowDate), seconds: 0, milliseconds: 0 }).getTime()
   const mapped = (await modDB.Mods.where('modified').above(thisMinute).toArray()).map(({ modified, tableName, op, priKey, log }) => {
     return {
-      [`${modified}__${tableName}__${op}`]: {
+      [`${modified?.toFixed(0) ?? ''}__${tableName}__${op}`]: {
         [priKey.toString()]: log,
       },
     }
@@ -40,7 +40,7 @@ export const createYamlLog = async () => {
   if (msUntilEpoch < 10000) console.log('finish Epoch', thisMinute)
 
   void minutesTable.put({ ts: thisMinute, data: yaml })
-  console.log(yaml, format(thisMinute, 'H:mm:ss:SSS'), 'next epoch in', msUntilEpoch)
+  console.log(format(thisMinute, 'H:mm:ss:SSS'), 'next epoch in', msUntilEpoch)
 }
 
 export const dgraphUpsert = async (task) => {
@@ -83,7 +83,7 @@ export const dgraphUpsert = async (task) => {
   }
   console.timeEnd('sendTask')
 }
-export const n8nUpsert = async (task) => {
+export const n8nUpsert = async (task: any) => {
   let response
   task.key = JSON.stringify(TaskVM.getCompoundKey(task))
   console.log('task obj to n8n:\n', task)

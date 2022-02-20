@@ -4,10 +4,9 @@ import { initialActiveTasks, initialCompletedTasks } from '../Model/Tasks'
 import { utcTs } from '../Utils/js-utils'
 import { TaskParams } from './../Model/Task'
 import { getCreatingHookForTable, getDeletingHookForTable, getUpdateHookForTable } from './dexie-sync-hooks'
+import { initPoll } from './dgraph-socket'
 // import { registerSyncProtocol } from './dexie-sync-ajax'
 import { mode, msg } from './workerImport'
-
-export let todoDB // export
 
 const bygonzConfig: Middleware<DBCore> = {
   stack: 'dbcore', // The only stack supported so far.
@@ -52,9 +51,9 @@ const bygonzConfig: Middleware<DBCore> = {
 * instead of one by one boilerplate:
 * this.CompletedTasks = this.table('CompletedTasks')
 */
-// const addTableRefs = (dexieInstance: Dexie) => dexieInstance.tables.forEach(table => {
-//   dexieInstance[table.name] = table
-// })
+const addTableRefs = (dexieInstance: Dexie) => dexieInstance.tables.forEach(table => {
+  dexieInstance[table.name] = table
+})
 
 export class TodoDB extends Dexie {
   // Declare implicit table properties. (just to inform Typescript. Instanciated by Dexie in stores() method)
@@ -106,7 +105,7 @@ export class TodoDB extends Dexie {
       CompletedTasks: '[created+owner], created, modified, owner',
       // ...other tables go here...//
     })
-    // addTableRefs(this)
+    addTableRefs(this)
     this.ActiveTasks.mapToClass(TaskVM) //   https://dexie.org/docs/Typescript#storing-real-classes-instead-of-just-interfaces
     this.CompletedTasks.mapToClass(TaskVM)
 
@@ -120,12 +119,12 @@ export class TodoDB extends Dexie {
     // this.syncable.disconnect('https://wh.n8n.zt.ax/webhook/dexie-sync')
   }
 }
-
+export let todoDB: TodoDB
 async function getDB () {
   // registerSyncProtocol()
   todoDB = await TodoDB.getInitializedInstance()
   const at = todoDB.ActiveTasks
-  const tasks = await at.toArray()
+  const tasks: TaskVM[] = await at.toArray()
   console.log('inww tasks', tasks)
   if (tasks.length === 1) {
     await at.put({ ...tasks[0], task: 'edited by ww' }) // put as edit
@@ -133,6 +132,12 @@ async function getDB () {
     const tasksa = await at.toArray()
     console.log('inww after', tasksa)
   }
+  // const mostRecentMod = Math.max(...(tasks.map((o) => { return o.modified })))
+  const onTaskPoll = (tasksResult) => {
+    console.log('ww poll result', tasksResult)
+  }
+  initPoll(onTaskPoll)
+  return todoDB
 }
 
 void getDB()

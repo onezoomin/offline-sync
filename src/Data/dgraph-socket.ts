@@ -1,10 +1,7 @@
 import { ApolloClient, gql, HttpLink, InMemoryCache } from '@apollo/client/core'
-import { utcTs } from '../Utils/js-utils'
-import { todoDB } from './WebWorker'
-// import { getMainDefinition } from '@apollo/client/utilities/graphql/getFromAST'
-// import { WebSocketLink } from '@apollo/link-ws/lib/webSocketLink'
-// import { createClient } from 'graphql-ws'
-// const client = createClient({
+import { ModVM } from './../Model/Mod'
+import { utcMsTs } from './bygonz'
+// const clientWS = createClient({
 //   url: 'wss://dghttp.zt.ax/graphql',
 // })
 // const wsLink = new WebSocketLink({
@@ -59,28 +56,21 @@ const client = new ApolloClient({
 //   expect(result).toEqual({ hello: 'Hello World!' })
 // })();
 
-// const subQuery = gql`
-// subscription {
-//   queryTask(filter: {
-//     task: {
-//       anyoftext: "ui"
-//     },
-//     and: {
-//       created: {
-//         gt: ${since}
-//       }
-//     }
-//   }) {
-//     key
-//     task
-//     modified
-//   }
-// }`
+const subQuery = `
+subscription {
+  queryTask {
+    modified
+    created
+    task
+    status
+    owner
+  }
+}`
 
 // https://github.com/enisdenjo/graphql-ws#observable
 // function toObservable (operation) {
 //   return new Observable((observer) =>
-//     client.subscribe(operation, {
+//     clientWS.subscribe(operation, {
 //       next: (data) => observer.next(data),
 //       error: (err) => observer.error(err),
 //       complete: () => observer.complete(),
@@ -106,7 +96,7 @@ const opts = {
   since: 0,
   searchFilter: '',
 }
-export const initPoll = (onResults, sinceOpt = 0, searchFilter = '', freq = 5000) => {
+export const initPoll = (onResults, sinceOpt = 0, searchFilter = '', freq = 60000) => {
   opts.since = sinceOpt
   opts.searchFilter = searchFilter
 
@@ -133,8 +123,8 @@ export const initPoll = (onResults, sinceOpt = 0, searchFilter = '', freq = 5000
       owner
     }
   }`
-    console.log('q', taskQuery)
-    opts.since = utcTs() // so that next request gets all after now now
+    // console.log('q', taskQuery)
+    opts.since = utcMsTs() // so that next request gets all after now now
     client.query({
       query: gql(taskQuery),
       // variables: {
@@ -143,16 +133,62 @@ export const initPoll = (onResults, sinceOpt = 0, searchFilter = '', freq = 5000
     }).then((response) => {
       const tasks = response?.data?.queryTask
       if (tasks?.length) {
-        void todoDB.ActiveTasks.bulkPut(tasks)
+        // void todoDB.ActiveTasks.bulkPut(tasks)
 
-        const mostRecentMod = Math.max(...(tasks.map((o) => o.modified)))
-        console.log(mostRecentMod, opts.since, 'in poll', response)
+        // const mostRecentMod = Math.max(...(tasks.map((o) => o.modified)), 0)
+        // console.log(mostRecentMod, opts.since, 'in poll', response)
         onResults(response)
       } else {
-        console.log('no results', response)
+        console.log('no tasks returned', response)
       }
     }).catch((e) => {
-      console.log(e)
+      console.error(e)
     })
   }, freq)
+}
+
+const castJsonModArray = (modishArray): ModVM[] => modishArray.map((eachMod) => {
+  const cleanMod = { ...eachMod, log: JSON.parse(eachMod.log), forKey: JSON.parse(eachMod.forKey) }
+  delete cleanMod.__typename
+  return new ModVM(cleanMod)
+})
+
+export const fetchMods = async (since = 0): Promise<ModVM[]> => {
+  console.time('fetchMods took')
+  const modQuery = `
+  query {
+    queryMod(filter: {
+      ts: {
+        gt: ${since}
+      }
+    }) {
+      ts
+      tableName
+      forKey
+      owner
+      modifier
+      op
+      log
+    }
+  }`
+  let returnArray: ModVM[] = []
+  try {
+    const response = await client.query({
+      query: gql(modQuery),
+      // variables: {
+      //   name,
+      // },
+    })
+    const mods = response?.data?.queryMod ?? []
+    if (mods?.length) {
+      console.log('mod results', response)
+    } else {
+      console.log('no mods returned', response)
+    }
+    returnArray = castJsonModArray(mods)
+  } catch (e) {
+    console.warn(e)
+  }
+  console.timeEnd('fetchMods took')
+  return returnArray
 }

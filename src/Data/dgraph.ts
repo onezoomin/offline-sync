@@ -87,9 +87,19 @@ export const addTaskResponse = `{
   }
 }`
 
-const queryDQL = `
+const queryTaskDQL = `
 {
-  node(func: anyoftext(Task.task, "ui") ) @filter(gt(created, 1645361869211)) {
+  node(func: anyoftext(Task.task, "random") ) @filter(gt(created, 1645361869211)) {
+    uid
+    expand(_all_) {
+      uid
+      expand(_all_)
+    }
+  }
+}`
+const queryModDQL = `
+{
+  node(func: gt(Mod.ts, 0))  {
     uid
     expand(_all_) {
       uid
@@ -102,7 +112,7 @@ const queryGraphQL = `
 query {
   queryTask(filter: {
     task: {
-      anyoftext: "ui"
+      anyoftext: "random"
     },
     and: {
       created: {

@@ -1,2 +1,4 @@
-import { TodoDB } from './WebWorker'
-export const todoDB = await TodoDB.getInitializedInstance()
+
+import { todoDB } from './WebWorker'
+
+export const todoDBui = todoDB

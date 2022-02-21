@@ -1,9 +1,9 @@
 import Dexie, { DBCore, Middleware } from 'dexie'
 import { CompoundKeyNumStr, TaskVM } from '../Model/Task'
 import { initialActiveTasks, initialCompletedTasks } from '../Model/Tasks'
-import { utcTs } from '../Utils/js-utils'
 import { TaskParams } from './../Model/Task'
-import { getCreatingHookForTable, getDeletingHookForTable, getUpdateHookForTable } from './dexie-sync-hooks'
+import { utcMsTs } from './bygonz'
+import { getCreatingHookForTable, getDeletingHookForTable, getUpdateHookForTable, opLogRollup } from './dexie-sync-hooks'
 import { initPoll } from './dgraph-socket'
 // import { registerSyncProtocol } from './dexie-sync-ajax'
 import { mode, msg } from './workerImport'
@@ -30,7 +30,7 @@ const bygonzConfig: Middleware<DBCore> = {
             // Copy the request object
             const myRequest = { ...req }
             // Do things before mutate, then
-            console.log('dbcore mut in ww', myRequest)
+            // console.log('dbcore mut in ww', myRequest)
             // call downlevel mutate:
             return downlevelTable.mutate(myRequest).then(res => {
               // Do things after mutate
@@ -119,16 +119,18 @@ export class TodoDB extends Dexie {
     // this.syncable.disconnect('https://wh.n8n.zt.ax/webhook/dexie-sync')
   }
 }
-export let todoDB: TodoDB
-async function getDB () {
+export const todoDB = await TodoDB.getInitializedInstance()
+export let rollupInterval
+// export let todoDB: TodoDB
+export const getDB = async () => {
   // registerSyncProtocol()
-  todoDB = await TodoDB.getInitializedInstance()
+  // todoDB = await TodoDB.getInitializedInstance()
   const at = todoDB.ActiveTasks
-  const tasks: TaskVM[] = await at.toArray()
-  console.log('inww tasks', tasks)
+  const tasks = await at.toArray() as TaskVM[]
+  // console.log('inww tasks', tasks)
   if (tasks.length === 1) {
     await at.put({ ...tasks[0], task: 'edited by ww' }) // put as edit
-    await at.put({ ...tasks[0], created: utcTs(), task: 'added from ww' }) // put as add
+    await at.put({ ...tasks[0], created: utcMsTs(), task: 'added from ww' }) // put as add
     const tasksa = await at.toArray()
     console.log('inww after', tasksa)
   }
@@ -137,6 +139,11 @@ async function getDB () {
     console.log('ww poll result', tasksResult)
   }
   initPoll(onTaskPoll)
+  void opLogRollup(true, true)
+  rollupInterval = setInterval(() => {
+    void opLogRollup()
+  }, 9900)
+  // initSub()
   return todoDB
 }
 

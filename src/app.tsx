@@ -8,6 +8,7 @@ import ActiveTask from './Components/Tasks/ActiveTask'
 import AddTasks from './Components/Tasks/AddTasks'
 import CompletedTask from './Components/Tasks/CompletedTask'
 import MyWorker from './Data/WebWorker?worker'
+import { userAddress } from './Model/Task'
 import { useDarkMode } from './Utils/react-utils'
 const workerApi = new MyWorker()
 
@@ -34,7 +35,7 @@ export const App = () => {
       </FlexRow>
 
       <div className="container mx-auto lg:w-1/2">
-        <h1 className="text-5xl">Todo App</h1>
+        <h1 className="text-5xl">Todo App - {userAddress.slice(0, 5)} </h1>
         <AddTasks />
         <ActiveTask />
         <hr />

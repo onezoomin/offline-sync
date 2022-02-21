@@ -1,21 +1,25 @@
 import Dexie from 'dexie'
 import { EpochClass, EpochObj } from '../Model/Epoch'
-import { ModVM } from '../Model/Mod'
-import { ModObj } from './../Model/Mod'
+import { ModCompoundKey, ModObj, modStoresDef, ModVM } from '../Model/Mod'
 
-// const addTableRefs = (dexieInstance: Dexie) => dexieInstance.tables.forEach(table => {
-//   dexieInstance[table.name] = table
-// })
+const appStartTimeStamp = Date.now()
+const p = performance.now()
+let precision = 0
+// milliseconds since epoch (100nanosecond "precision")
+export function utcMsTs (): number {
+  const now = new Date()
+  const newPrecision = Math.round(performance.now() - p)
+  precision = newPrecision === precision ? newPrecision + 1 : newPrecision // ensure 1ms difference - basically
+  return appStartTimeStamp + precision + (now.getTimezoneOffset() * 60 * 1000)
+}
 
 export class BygonzDB extends Dexie {
-  // [x: string]: any
-  // Declare implicit table properties. (just to inform Typescript. Instanciated by Dexie in stores() method)
-  Mods: Dexie.Table<ModVM | ModObj, [number, string]> // number = type of the priKey
-  // ...other tables go here...
+  Mods: Dexie.Table<ModVM | ModObj, ModCompoundKey>
+
   static singletonInstance: BygonzDB
 
   async init () {
-    console.log('init')
+    console.log('init', this)
   }
 
   static async getInitializedInstance () {
@@ -27,17 +31,12 @@ export class BygonzDB extends Dexie {
   }
 
   constructor () {
-    super('BygonzDB')
-
-    this.version(1).stores({
-      Mods: '[modified+tableName+op], tableName, op, modified, priKey',
-      // ...other tables go here...//
-    })
-
-    // addTableRefs(this)
+    super('Bygonz_ModDB')
+    this.version(1).stores(modStoresDef)
     this.Mods.mapToClass(ModVM) //   https://dexie.org/docs/Typescript#storing-real-classes-instead-of-just-interfaces
   }
 }
+
 export const modDB = new BygonzDB()
 export class EpochDB extends Dexie {
   // [x: string]: any
@@ -51,7 +50,7 @@ export class EpochDB extends Dexie {
   }
 
   constructor (spanMs: number, name: string) {
-    super(`${name}EpochDB`)
+    super(`Bygonz_${name}EpochDB`)
     this.spanMs = spanMs
 
     this.version(1).stores({

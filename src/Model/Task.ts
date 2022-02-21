@@ -1,6 +1,6 @@
 import { Wallet } from '@ethersproject/wallet'
+import { utcMsTs } from '../Data/bygonz'
 import { completeActiveTask } from '../Data/data'
-import { utcTs } from '../Utils/js-utils'
 import { addActiveTask } from './../Data/data'
 import { ModObj, ModVM } from './Mod'
 import { TaskStatus } from './TaskStatus'
@@ -11,6 +11,7 @@ console.log('Wallet for this session =', userAddress, userWallet._mnemonic)
 
 export type CompoundKeyNumStr = [number, string]
 
+// TaskParams can be used for a js obj that will be cast to Task or TaskVM
 export interface TaskParams {
   created?: number
   owner?: string
@@ -20,7 +21,7 @@ export interface TaskParams {
   status: TaskStatus
 }
 export class TimeStampedBase {
-  created: number = utcTs()
+  created: number = utcMsTs()
   modified: number = this.created
 
   constructor (obj: any) {

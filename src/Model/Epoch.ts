@@ -1,11 +1,10 @@
-import { utcTs } from '../Utils/js-utils'
-
+import { utcMsTs } from '../Data/bygonz'
 export class EpochObj {
   data: string
   ts?: number
 
   constructor (params: EpochObj) {
-    params.ts = params.ts ?? utcTs()
+    params.ts = params.ts ?? utcMsTs()
     Object.assign(this, params)
   }
 }

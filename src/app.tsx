@@ -7,10 +7,8 @@ import { FlexRow } from './Components/Minis'
 import ActiveTask from './Components/Tasks/ActiveTask'
 import AddTasks from './Components/Tasks/AddTasks'
 import CompletedTask from './Components/Tasks/CompletedTask'
-import MyWorker from './Data/WebWorker?worker'
 import { userAddress } from './Model/Task'
 import { useDarkMode } from './Utils/react-utils'
-const workerApi = new MyWorker()
 
 export const App = () => {
   const theme = useDarkMode()
@@ -25,7 +23,6 @@ export const App = () => {
   //   }
   //   void getlt()
   // }, [tl])
-  workerApi.postMessage('ping') // ping ww with each app render
   return (
     <ThemeProvider theme={theme}>
       <FlexRow className="p-4">

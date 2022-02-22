@@ -34,7 +34,7 @@ export const ModificationsQuery = (key: CompoundKeyNumStr = [0, '']) => modDB.Mo
 
 export const mockUpdateStreamer = async () => {
   let eventCount = 0
-  const maxUpdates = 4
+  const maxUpdates = 6
   const tableRef = todoDB.ActiveTasks
 
   while (eventCount++ < maxUpdates) {
@@ -52,7 +52,7 @@ export const mockUpdateStreamer = async () => {
       task = `${userAddress.slice(0, 5)} create ${(Math.random() * 2000).toFixed(0)}`
       await tableRef.add(new Task({ task, status: TaskStatus.Active }))
     }
-    console.log('waiting 30s ', maxUpdates - eventCount, ' more times')
+    console.log('will automock in 30s ', maxUpdates - eventCount, ' more times')
 
     await sleep(30000)
   }

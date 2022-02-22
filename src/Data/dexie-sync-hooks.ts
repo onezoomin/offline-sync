@@ -11,7 +11,7 @@ import { ModVM } from './../Model/Mod'
 import { userAddress } from './../Model/Task'
 import { EpochDB, modDB, utcMsTs } from './bygonz'
 import { fetchMods } from './dgraph-socket'
-import { todoDB } from './WebWorker'
+import { checkWorker, todoDB } from './WebWorker'
 const all = Promise.all.bind(Promise) // https://stackoverflow.com/a/48399813/2919380
 
 // TODO consider reasons DBcore is superior to the hooks API:
@@ -144,6 +144,7 @@ export const opLogRollup = async (force = false, forceSinceZero = false) => {
 }
 
 export const dgraphUpsert = async (task) => {
+  checkWorker('dgraphUpsert async called from hook')
   const hookStateRef = hookState
   if (hookStateRef.isSuspended) return // console.log('skipping dgraphUpsert')
   let response
@@ -187,6 +188,7 @@ export const dgraphUpsert = async (task) => {
 }
 
 export const dgraphMod = async (modIsh: any, modJson = (new ModVM(modIsh)).forGql()) => {
+  checkWorker('dgraphMod')
   const hookStateRef = hookState
   if (hookStateRef.isSuspended) return // console.log('skipping commitMod')
 
@@ -257,7 +259,9 @@ export const n8nUpsert = async (task: any) => {
   console.timeEnd('addTask n8n')
 }
 export const getUpdateHookForTable = (tableName) => {
+  checkWorker('create update hook')
   const upFx = function updHook (modifications, forKey, obj/* , transaction */) {
+    checkWorker('call update hook')
     const hookStateRef = hookState
     if (hookStateRef.isSuspended) return // console.log('skipping updHook')
     // You may use transaction to do additional database operations.

@@ -6,7 +6,15 @@ import { utcMsTs } from './bygonz'
 import { getCreatingHookForTable, getDeletingHookForTable, getUpdateHookForTable, opLogRollup } from './dexie-sync-hooks'
 // import { initPoll } from './dgraph-socket'
 // import { registerSyncProtocol } from './dexie-sync-ajax'
-import { mode, msg } from './workerImport'
+
+export const checkWorker = (...msg) => {
+  // run this in global scope of window or worker. since window.self = window, we're ok
+  if (self.document === undefined && !(self instanceof Window)) {
+    console.log('huzzah! a worker!', ...msg)
+  } else {
+    console.log(self?.DedicatedWorkerGlobalScope, self?.WorkerGlobalScope, self.document, ' sad trombone. not worker ', ...msg)
+  }
+}
 
 const bygonzConfig: Middleware<DBCore> = {
   stack: 'dbcore', // The only stack supported so far.
@@ -67,12 +75,6 @@ export class TodoDB extends Dexie {
   async init () {
     this.use(bygonzConfig)
 
-    for (const { name: eachTableName } of this.tables) {
-      this[eachTableName].hook('updating', getUpdateHookForTable(eachTableName))
-      this[eachTableName].hook('creating', getCreatingHookForTable(eachTableName))
-      this[eachTableName].hook('deleting', getDeletingHookForTable(eachTableName))
-    }
-
     const at = this.ActiveTasks
     if ((await at.count()) === 0) {
       await at.bulkAdd(initialActiveTasks)
@@ -120,9 +122,35 @@ export class TodoDB extends Dexie {
   }
 }
 export const todoDB = await TodoDB.getInitializedInstance()
+
+const getTableHooks = {
+  updating: getUpdateHookForTable,
+  creating: getCreatingHookForTable,
+  deleting: getDeletingHookForTable,
+}
+const objThatOnlyLivesHere = []
+for (const { name: eachTableName } of todoDB.tables) {
+  for (const eachEvent of ['updating', 'creating', 'deleting']) {
+    objThatOnlyLivesHere[`${eachTableName}_${eachEvent}}`] = getTableHooks[eachEvent](eachTableName)
+    todoDB[eachTableName].hook(eachEvent, objThatOnlyLivesHere[`${eachTableName}_${eachEvent}}`])
+  }
+  // todoDB[eachTableName].hook('creating', getCreatingHookForTable(eachTableName))
+  // todoDB[eachTableName].hook('deleting', getDeletingHookForTable(eachTableName))
+}
+
 export let rollupInterval
 // export let todoDB: TodoDB
+// const checkWorker = (...msg) => {
+//   // run this in global scope of window or worker. since window.self = window, we're ok
+//   if (typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope) {
+//     console.log('huzzah! a worker!', ...msg)
+//   } else {
+//     console.log(' sad trombone. not worker ', ...msg)
+//   }
+// }
+
 export const getDB = async () => {
+  checkWorker('getDB')
   // registerSyncProtocol()
   // todoDB = await TodoDB.getInitializedInstance()
   const at = todoDB.ActiveTasks
@@ -134,6 +162,7 @@ export const getDB = async () => {
     const tasksa = await at.toArray()
     console.log('inww after', tasksa)
   }
+
   // const mostRecentMod = Math.max(...(tasks.map((o) => { return o.modified })))
   // const onTaskPoll = (tasksResult) => {
   //   console.log('ww poll result', tasksResult)
@@ -146,15 +175,5 @@ export const getDB = async () => {
   // initSub()
   return todoDB
 }
-
+checkWorker('top of worker')
 void getDB()
-
-let counter = 0
-self.onmessage = (e) => {
-  if (e.data === 'ping') {
-    self.postMessage({ msg: `${msg} - ${counter++}`, mode })
-  } else if (e.data === 'clear') {
-    counter = 1
-    self.postMessage({ msg: null, mode: null })
-  }
-}

@@ -1,3 +1,5 @@
+import format from 'date-fns/format'
+import fromUnixTime from 'date-fns/fromUnixTime'
 import { TaskStatus } from '../Model/TaskStatus'
 import { sleep } from '../Utils/js-utils'
 import { CompoundKeyNumStr, Task, TaskParams, TaskVM, userAddress } from './../Model/Task'
@@ -36,13 +38,18 @@ export const mockUpdateStreamer = async () => {
   const tableRef = todoDB.ActiveTasks
 
   while (eventCount++ < maxUpdates) {
-    let key
-    const task = `${userAddress.slice(0, 5)} random ${(Math.random() * 20000).toFixed(2)}`
+    let key, task
+
     const taskArray = await tableRef.toArray()
-    if (Math.random() >= 0.3 && taskArray.length) {
+    const addPercentage = 0.25
+    if (Math.random() >= addPercentage && taskArray.length) {
       key = (taskArray[Math.floor(Math.random() * taskArray.length)] as TaskVM)?.id
-      await tableRef.update(key, { task, modified: utcMsTs() })
+      const modified = utcMsTs()
+      const modTime = format(fromUnixTime(modified / 1000), 'H:mm:ss:SSS')
+      task = `upd by ${userAddress.slice(0, 5)} @ ${modTime}`
+      await tableRef.update(key, { task, modified })
     } else {
+      task = `${userAddress.slice(0, 5)} create ${(Math.random() * 2000).toFixed(0)}`
       await tableRef.add(new Task({ task, status: TaskStatus.Active }))
     }
     console.log('waiting 30s ', maxUpdates - eventCount, ' more times')

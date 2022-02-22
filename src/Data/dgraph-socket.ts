@@ -1,4 +1,4 @@
-import { ApolloClient, gql, HttpLink, InMemoryCache } from '@apollo/client/core'
+import { ApolloClient, DefaultOptions, gql, HttpLink, InMemoryCache } from '@apollo/client/core'
 import { ModVM } from './../Model/Mod'
 import { utcMsTs } from './bygonz'
 // const clientWS = createClient({
@@ -29,12 +29,22 @@ const httpLink = new HttpLink({
 //   wsLink,
 //   httpLink,
 // )
-
+const defaultOptions: DefaultOptions = {
+  watchQuery: {
+    fetchPolicy: 'no-cache',
+    errorPolicy: 'ignore',
+  },
+  query: {
+    fetchPolicy: 'no-cache',
+    errorPolicy: 'all',
+  },
+}
 const client = new ApolloClient({
   cache: new InMemoryCache({
     resultCaching: false,
   }),
   link: httpLink,
+  defaultOptions,
 })
 
 // query
@@ -157,7 +167,7 @@ export const fetchMods = async (since = 0): Promise<ModVM[]> => {
   console.time('fetchMods took')
   const modQuery = `
   query {
-    queryMod(filter: {
+    queryMod(order: { asc: ts },filter: {
       ts: {
         gt: ${since}
       }
@@ -180,11 +190,11 @@ export const fetchMods = async (since = 0): Promise<ModVM[]> => {
       // },
     })
     const mods = response?.data?.queryMod ?? []
-    if (mods?.length) {
-      console.log('mod results', response)
-    } else {
-      console.log('no mods returned', response)
-    }
+    // if (mods?.length) {
+    //   // console.log('mod results', response)
+    // } else {
+    //   // console.log('no mods returned', response)
+    // }
     returnArray = castJsonModArray(mods)
   } catch (e) {
     console.warn(e)

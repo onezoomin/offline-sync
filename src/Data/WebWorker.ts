@@ -4,7 +4,7 @@ import { initialActiveTasks, initialCompletedTasks } from '../Model/Tasks'
 import { TaskParams } from './../Model/Task'
 import { utcMsTs } from './bygonz'
 import { getCreatingHookForTable, getDeletingHookForTable, getUpdateHookForTable, opLogRollup } from './dexie-sync-hooks'
-import { initPoll } from './dgraph-socket'
+// import { initPoll } from './dgraph-socket'
 // import { registerSyncProtocol } from './dexie-sync-ajax'
 import { mode, msg } from './workerImport'
 
@@ -135,14 +135,14 @@ export const getDB = async () => {
     console.log('inww after', tasksa)
   }
   // const mostRecentMod = Math.max(...(tasks.map((o) => { return o.modified })))
-  const onTaskPoll = (tasksResult) => {
-    console.log('ww poll result', tasksResult)
-  }
-  initPoll(onTaskPoll)
+  // const onTaskPoll = (tasksResult) => {
+  //   console.log('ww poll result', tasksResult)
+  // }
+  // initPoll(onTaskPoll)
   void opLogRollup(true, true)
   rollupInterval = setInterval(() => {
     void opLogRollup()
-  }, 9900)
+  }, 10000)
   // initSub()
   return todoDB
 }

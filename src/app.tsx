@@ -7,7 +7,7 @@ import { FlexRow } from './Components/Minis'
 import ActiveTask from './Components/Tasks/ActiveTask'
 import AddTasks from './Components/Tasks/AddTasks'
 import CompletedTask from './Components/Tasks/CompletedTask'
-import { userAddress } from './Model/Task'
+import { userAddress } from './Data/wallet'
 import { useDarkMode } from './Utils/react-utils'
 
 export const App = () => {

@@ -164,7 +164,7 @@ const castJsonModArray = (modishArray): ModVM[] => modishArray.map((eachMod) => 
 })
 
 export const fetchMods = async (since = 0): Promise<ModVM[]> => {
-  console.time('fetchMods took')
+  // console.time('fetchMods took')
   const modQuery = `
   query {
     queryMod(order: { asc: ts },filter: {
@@ -199,6 +199,6 @@ export const fetchMods = async (since = 0): Promise<ModVM[]> => {
   } catch (e) {
     console.warn(e)
   }
-  console.timeEnd('fetchMods took')
+  // console.timeEnd('fetchMods took')
   return returnArray
 }

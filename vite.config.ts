@@ -1,4 +1,4 @@
-import preactRefresh from '@prefresh/vite'
+import prefresh from '@prefresh/vite'
 // import nodePolyfills from 'rollup-plugin-polyfill-node'
 import { defineConfig } from 'vite'
 import WindiCSS from 'vite-plugin-windicss'
@@ -13,6 +13,7 @@ export default defineConfig({
     // cors: {
     //   allowedHeaders: '*',
     // },
+    // },o
   },
   esbuild: {
     jsxFactory: 'h',
@@ -30,7 +31,12 @@ export default defineConfig({
     },
   },
   plugins: [
-    preactRefresh(),
+    prefresh({
+      // exclude: [
+      //   'src/Data/WebWorker.ts',
+
+      // ],
+    }),
     WindiCSS({ safelist: 'prose prose-sm m-auto' }),
     // comlink(),
     // pluginHelper(),

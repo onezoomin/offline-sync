@@ -1,179 +1,176 @@
-import Dexie, { DBCore, Middleware } from 'dexie'
-import { CompoundKeyNumStr, TaskVM } from '../Model/Task'
-import { initialActiveTasks, initialCompletedTasks } from '../Model/Tasks'
-import { TaskParams } from './../Model/Task'
-import { utcMsTs } from './bygonz'
-import { getCreatingHookForTable, getDeletingHookForTable, getUpdateHookForTable, opLogRollup } from './dexie-sync-hooks'
-// import { initPoll } from './dgraph-socket'
-// import { registerSyncProtocol } from './dexie-sync-ajax'
+import { Table } from 'dexie' // importing types and interfaces up here seems fine most others trigger the HTMLElement error
 
 export const checkWorker = (...msg) => {
   // run this in global scope of window or worker. since window.self = window, we're ok
-  if (self.document === undefined && !(self instanceof Window)) {
-    console.log('huzzah! a worker!', ...msg)
+  if (self.document === undefined) {
+    console.log('Worker!', ...msg)
   } else {
-    console.log(self?.DedicatedWorkerGlobalScope, self?.WorkerGlobalScope, self.document, ' sad trombone. not worker ', ...msg)
+    console.log(self.document, ' sad trombone. not worker ', ...msg)
   }
 }
+checkWorker('top of worker')
 
-const bygonzConfig: Middleware<DBCore> = {
-  stack: 'dbcore', // The only stack supported so far.
-  name: 'bygonz', // Optional name of your middleware
-  create (downlevelDatabase) {
-    // console.log('ww create in use.create', downlevelDatabase)
-    // Return your own implementation of DBCore:
-    return {
-      // Copy default implementation.
-      ...downlevelDatabase,
-      // Override table method
-      table (tableName) {
-        // Call default table method
-        const downlevelTable = downlevelDatabase.table(tableName)
-        // Derive your own table from it:
-        return {
-          // Copy default table implementation:
-          ...downlevelTable,
-          // Override the mutate method:
-          mutate: req => {
-            // Copy the request object
-            const myRequest = { ...req }
-            // Do things before mutate, then
-            // console.log('dbcore mut in ww', myRequest)
-            // call downlevel mutate:
-            return downlevelTable.mutate(myRequest).then(res => {
-              // Do things after mutate
-              const myResponse = { ...res }
-              // Then return your response:
-              return myResponse
-            })
-          },
-        }
-      },
-    }
+// hack to avoid overlay.ts's dom assumptions
+self.HTMLElement = function () {
+  return {}
+}
+self.customElements = {
+  get () {
+    return []
   },
 }
 
-/*
-* adds all tables as refs by name "on" the db instance
-* meant to be called after this.version(#).stores
-* instead of one by one boilerplate:
-* this.CompletedTasks = this.table('CompletedTasks')
-*/
-const addTableRefs = (dexieInstance: Dexie) => dexieInstance.tables.forEach(table => {
-  dexieInstance[table.name] = table
-})
+export let todoDBwwRef
+export let fetchAndApplyMods
+export let userAddress: string = 'premessage'
 
-export class TodoDB extends Dexie {
-  // Declare implicit table properties. (just to inform Typescript. Instanciated by Dexie in stores() method)
-  // TaskParams | TaskVM allows for partial objects to be used in add and put and for the class to include getters
-  ActiveTasks: Dexie.Table<TaskParams | TaskVM, CompoundKeyNumStr> // TaskID = type of the priKey
-  CompletedTasks: Dexie.Table<TaskParams | TaskVM, CompoundKeyNumStr>
-  // ...other tables go here...
+self.onmessage = async (e) => {
+  if (e.data.cmd === 'init') {
+    checkWorker('on message in bygonz worker', e)
+    userAddress = e.data.userAddress
+    // try {
 
-  static singletonInstance: TodoDB
+    // } catch (error) {
+    //   console.error('instantiate todoDB', error)
+    // }
 
-  async init () {
-    this.use(bygonzConfig)
+    try {
+      const { utcMsTs } = await import('./bygonz')
+      const { todoDB } = await import('./dexie')
+      todoDBwwRef = todoDB
+      // checkWorker(utcMsTs(), 'todoDB', todoDB)
+      const { getCreatingHookForTable, getDeletingHookForTable, getUpdateHookForTable, opLogRollup } = await import('./dexie-sync-hooks')
 
-    const at = this.ActiveTasks
-    if ((await at.count()) === 0) {
-      await at.bulkAdd(initialActiveTasks)
+      const getTableHooks = {
+        updating: getUpdateHookForTable,
+        creating: getCreatingHookForTable,
+        deleting: getDeletingHookForTable,
+      }
+      const objThatOnlyLivesHere: Record<string, (tableName: any) => (modifications: any, forKey: any, obj: any) => void> = {}
+      for (const { name: eachTableName } of todoDB.tables) {
+        for (const eachEvent of ['updating', 'creating', 'deleting']) {
+          objThatOnlyLivesHere[`${eachTableName}_${eachEvent}}`] = (getTableHooks[eachEvent](eachTableName)).bind(self);
+          (todoDB[eachTableName] as Table).hook(eachEvent, objThatOnlyLivesHere[`${eachTableName}_${eachEvent}}`])
+        }
+      // todoDB[eachTableName].hook('creating', getCreatingHookForTable(eachTableName))
+      // todoDB[eachTableName].hook('deleting', getDeletingHookForTable(eachTableName))
+      }
+
+      const bygonzConfig: any = { // const { DBCore, Middleware } = await import('dexie')
+        stack: 'dbcore', // The only stack supported so far.
+        name: 'bygonz', // Optional name of your middleware
+        create (downlevelDatabase) {
+        // console.log('ww create in use.create', downlevelDatabase)
+        // Return your own implementation of DBCore:
+          return {
+          // Copy default implementation.
+            ...downlevelDatabase,
+            // Override table method
+            table (tableName) {
+            // Call default table method
+              const downlevelTable = downlevelDatabase.table(tableName)
+              // Derive your own table from it:
+              return {
+              // Copy default table implementation:
+                ...downlevelTable,
+                // Override the mutate method:
+                mutate: req => {
+                // Copy the request object
+                  const myRequest = { ...req }
+                  // Do things before mutate, then
+                  console.log('dbcore mut in ww', myRequest)
+                  // call downlevel mutate:
+                  return downlevelTable.mutate(myRequest).then(res => {
+                  // Do things after mutate
+                    const myResponse = { ...res }
+                    // Then return your response:
+                    return myResponse
+                  })
+                },
+              }
+            },
+          }
+        },
+      }
+
+      const setupWWDB = async () => {
+        todoDB.use(bygonzConfig)
+        checkWorker(utcMsTs(), 'todoDB with hooks', todoDB)
+
+        fetchAndApplyMods = async () => {
+          knownMods = await modDB.Mods.where('ts').above(forceSinceZero ? 0 : since.ts).toArray() as ModVM[]
+          fetchedMods = await fetchMods(forceSinceZero ? 0 : since.ts) // returns cast ModVM
+
+          // console.log(fetchedMods?.length, 'mods fetched since :', format(since.ts, 'H:mm:ss:SSS'))
+          since.ts = prevMinute
+          // console.log('this:', format(thisMinute, 'H:mm:ss:SSS'), 'prev:', format(since.ts, 'H:mm:ss:SSS'))
+
+          // do bulkPut - idempotent opLog merge
+          if (fetchedMods?.length) {
+            const modKeysKnown = knownMods.map((eachMod) => JSON.stringify(ModVM.getCompoundKey(eachMod)))
+
+            const unknownMods = fetchedMods.filter((eachIncomingMod) => !modKeysKnown.includes(JSON.stringify(eachIncomingMod.id)))
+            if (unknownMods.length) {
+              console.log('modKeysKnown', modKeysKnown.length)
+              console.log('unknown', unknownMods)
+              await modDB.Mods.bulkPut(unknownMods)
+              await applyMods(unknownMods, todoDB)
+            } else {
+              // console.log('all mods already known', modKeysKnown.length)
+            }
+          }
+        }
+        // const mostRecentMod = Math.max(...(tasks.map((o) => { return o.modified })))
+
+        // const onTaskPoll = (tasksResult) => {
+        //   console.log('ww poll result', tasksResult)
+        // }
+        // initPoll(onTaskPoll)
+
+        const mockUpdateStreamer = async () => {
+          const format = (await import('date-fns/format')).default
+          const fromUnixTime = (await import('date-fns/fromUnixTime')).default
+          const { Task, TaskVM } = await import('../Model/Task')
+          const { TaskStatus } = await import('../Model/TaskStatus')
+          const { sleep } = await import('../Utils/js-utils')
+          let eventCount = 0
+          const maxUpdates = 6
+          const tableRef: Table = todoDB.ActiveTasks
+
+          while (eventCount++ < maxUpdates) {
+            let key, task
+
+            const taskArray = (await tableRef.toArray()) as TaskVM[]
+            const addPercentage = 0.25
+            if (Math.random() >= addPercentage && taskArray.length) {
+              key = (taskArray[Math.floor(Math.random() * taskArray.length)])?.id
+              const modified = utcMsTs()
+              const modTime = format(fromUnixTime(modified / 1000), 'H:mm:ss:SSS')
+              task = `upd by ${userAddress.slice(0, 5)} @ ${modTime}`
+              await tableRef.update(key, { task, modified })
+            } else {
+              task = `${userAddress.slice(0, 5)} create ${(Math.random() * 2000).toFixed(0)}`
+              await tableRef.add(new Task({ task, owner: userAddress, status: TaskStatus.Active }))
+            }
+            console.log('will automock in 30s ', maxUpdates - eventCount, ' more times')
+
+            await sleep(30000)
+          }
+        }
+
+        void mockUpdateStreamer()
+
+        void opLogRollup(true, true)
+        const rollupInterval = setInterval(() => {
+          void opLogRollup()
+        }, 10000)
+        // initSub()
+        return todoDB
+      }
+
+      await setupWWDB()
+    } catch (error) {
+      console.error(error)
     }
-    if ((await this.CompletedTasks.count()) === 0) {
-      await this.CompletedTasks.bulkAdd(initialCompletedTasks)
-    }
-  }
-
-  static async getInitializedInstance () {
-    if (!this.singletonInstance) {
-      this.singletonInstance = new TodoDB()
-      await this.singletonInstance.init()
-    }
-    return this.singletonInstance
-  }
-
-  constructor () {
-    super('TodoDB')
-
-    // super('TodoDB', { addons: [dexieCloud] })
-    // this.cloud.configure({
-    //   databaseUrl: 'https://wh.n8n.zt.ax/webhook/dexie-cloud',
-    //   requireAuth: false,
-    //   // fetchToken?: customTokenFetcher
-    // })
-
-    this.version(1).stores({
-      ActiveTasks: '[created+owner], created, modified, owner',
-      CompletedTasks: '[created+owner], created, modified, owner',
-      // ...other tables go here...//
-    })
-    addTableRefs(this)
-    this.ActiveTasks.mapToClass(TaskVM) //   https://dexie.org/docs/Typescript#storing-real-classes-instead-of-just-interfaces
-    this.CompletedTasks.mapToClass(TaskVM)
-
-    // this.syncable.connect(
-    //   'todo_sync_protocol',
-    //   'https://wh.n8n.zt.ax/webhook/dexie-sync',
-    //   // {options...},
-    // ).catch(err => {
-    //   console.error('Failed to connect:', err.stack ?? err)
-    // })
-    // this.syncable.disconnect('https://wh.n8n.zt.ax/webhook/dexie-sync')
   }
 }
-export const todoDB = await TodoDB.getInitializedInstance()
-
-const getTableHooks = {
-  updating: getUpdateHookForTable,
-  creating: getCreatingHookForTable,
-  deleting: getDeletingHookForTable,
-}
-const objThatOnlyLivesHere = []
-for (const { name: eachTableName } of todoDB.tables) {
-  for (const eachEvent of ['updating', 'creating', 'deleting']) {
-    objThatOnlyLivesHere[`${eachTableName}_${eachEvent}}`] = getTableHooks[eachEvent](eachTableName)
-    todoDB[eachTableName].hook(eachEvent, objThatOnlyLivesHere[`${eachTableName}_${eachEvent}}`])
-  }
-  // todoDB[eachTableName].hook('creating', getCreatingHookForTable(eachTableName))
-  // todoDB[eachTableName].hook('deleting', getDeletingHookForTable(eachTableName))
-}
-
-export let rollupInterval
-// export let todoDB: TodoDB
-// const checkWorker = (...msg) => {
-//   // run this in global scope of window or worker. since window.self = window, we're ok
-//   if (typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope) {
-//     console.log('huzzah! a worker!', ...msg)
-//   } else {
-//     console.log(' sad trombone. not worker ', ...msg)
-//   }
-// }
-
-export const getDB = async () => {
-  checkWorker('getDB')
-  // registerSyncProtocol()
-  // todoDB = await TodoDB.getInitializedInstance()
-  const at = todoDB.ActiveTasks
-  const tasks = await at.toArray() as TaskVM[]
-  // console.log('inww tasks', tasks)
-  if (tasks.length === 1) {
-    await at.put({ ...tasks[0], task: 'edited by ww' }) // put as edit
-    await at.put({ ...tasks[0], created: utcMsTs(), task: 'added from ww' }) // put as add
-    const tasksa = await at.toArray()
-    console.log('inww after', tasksa)
-  }
-
-  // const mostRecentMod = Math.max(...(tasks.map((o) => { return o.modified })))
-  // const onTaskPoll = (tasksResult) => {
-  //   console.log('ww poll result', tasksResult)
-  // }
-  // initPoll(onTaskPoll)
-  void opLogRollup(true, true)
-  rollupInterval = setInterval(() => {
-    void opLogRollup()
-  }, 10000)
-  // initSub()
-  return todoDB
-}
-checkWorker('top of worker')
-void getDB()

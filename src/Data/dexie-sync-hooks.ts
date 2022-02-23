@@ -1,18 +1,16 @@
 import axios from 'axios'
-import format from 'date-fns/format'
+// import format from 'date-fns/format'
 import fromUnixTime from 'date-fns/fromUnixTime'
 import getMinutes from 'date-fns/getMinutes'
 import set from 'date-fns/set'
-import { PromiseExtended, Table } from 'dexie'
 import { dump } from 'js-yaml'
 import { Operations } from '../Model/Mod'
-import { CompoundKeyNumStr, TaskVM } from '../Model/Task'
+import { TaskVM } from '../Model/Task'
 import { ModVM } from './../Model/Mod'
-import { userAddress } from './../Model/Task'
 import { EpochDB, modDB, utcMsTs } from './bygonz'
+import { applyMods, hookState } from './Bygonz/mod-utils'
 import { fetchMods } from './dgraph-socket'
-import { checkWorker, todoDB } from './WebWorker'
-const all = Promise.all.bind(Promise) // https://stackoverflow.com/a/48399813/2919380
+import { checkWorker, userAddress } from './WebWorker'
 
 // TODO consider reasons DBcore is superior to the hooks API:
 // https://dexie.org/docs/DBCore/DBCore
@@ -20,15 +18,9 @@ const all = Promise.all.bind(Promise) // https://stackoverflow.com/a/48399813/29
 //   It allows the injector to take actions both before and after the forwarded call.
 //   It covers more use cases, such as when a transaction is created, allow custom index proxies etc.
 
-const modTable = modDB.Mods
-
 const minuteEpochDB = new EpochDB(6000, 'Minute')
 const minutesTable = minuteEpochDB.Epochs
-
-const hookState = {
-  isSuspended: false,
-}
-
+const modTable = modDB.Mods
 const commitMod = (modLogEntry) => {
   if (hookState.isSuspended) return // console.log('skipping commit')
 
@@ -36,50 +28,6 @@ const commitMod = (modLogEntry) => {
   void dgraphMod(modLogEntry)
 }
 
-const applyMods = async (castModsVMarray) => {
-  // console.log('apply', castModsVMarray)
-
-  const addMods: Record<string, ModVM[]> = {}
-  const putMods: Record<string, ModVM[]> = {}
-  const delMods: Record<string, CompoundKeyNumStr[]> = {}
-
-  for (const eachMod of castModsVMarray) {
-    if (eachMod.op === Operations.UPDATE) {
-      if (!putMods[eachMod.tableName]) putMods[eachMod.tableName] = []
-      putMods[eachMod.tableName].push(eachMod.log.obj)
-    } else if (eachMod.op === Operations.CREATE) {
-      if (!addMods[eachMod.tableName]) addMods[eachMod.tableName] = []
-      addMods[eachMod.tableName].push(eachMod.log.obj)
-    } else if (eachMod.op === Operations.DELETE) {
-      if (!delMods[eachMod.tableName]) delMods[eachMod.tableName] = []
-      delMods[eachMod.tableName].push(TaskVM.getCompoundKey(eachMod.log.obj)) // TODO create interface for log entries and objWithId
-    } else {
-      console.log('unknown op', eachMod)
-    }
-  }
-  console.log('apply', castModsVMarray, { add: addMods }, { put: putMods }, { del: delMods })
-  hookState.isSuspended = true
-  const bulkPromises: PromiseExtended[] = []
-  try {
-    for (const eachTabName in addMods) {
-      console.log('creating via Mods', eachTabName, addMods[eachTabName])
-      bulkPromises.push((todoDB[eachTabName] as Table)?.bulkPut(addMods[eachTabName]))
-    }
-    for (const eachTabName in putMods) {
-      console.log('updating via Mods', eachTabName, putMods[eachTabName])
-      bulkPromises.push((todoDB[eachTabName] as Table)?.bulkPut(putMods[eachTabName]))
-    }
-    for (const eachTabName in delMods) {
-      console.log('deleting via Mods', eachTabName, delMods[eachTabName])
-      bulkPromises.push((todoDB[eachTabName] as Table)?.bulkDelete(delMods[eachTabName]))
-    }
-    await all(bulkPromises)
-    hookState.isSuspended = false
-  } catch (e) {
-    console.error('applying mods', e)
-    hookState.isSuspended = false
-  }
-}
 const yamlOptions = {
   noArrayIndent: true,
 }
@@ -96,15 +44,17 @@ export const opLogRollup = async (force = false, forceSinceZero = false) => {
   let knownMods: ModVM[] = []
   let fetchedMods: ModVM[] = []
   const msUntilEpoch = nextMinute - nownow
-  console.log(format(thisMinute, 'H:mm:ss:SSS'), 'next epoch in', msUntilEpoch)
+  // console.log(format(thisMinute, 'H:mm:ss:SSS'), 'next epoch in', msUntilEpoch)
 
   const fetchAndApplyMods = async () => {
+    const { todoDB } = await import('./dexie')
+    checkWorker('fetchAndApplyMods', todoDB)
     knownMods = await modDB.Mods.where('ts').above(forceSinceZero ? 0 : since.ts).toArray() as ModVM[]
     fetchedMods = await fetchMods(forceSinceZero ? 0 : since.ts) // returns cast ModVM
 
-    console.log(fetchedMods?.length, 'mods fetched since :', format(since.ts, 'H:mm:ss:SSS'))
+    // console.log(fetchedMods?.length, 'mods fetched since :', format(since.ts, 'H:mm:ss:SSS'))
     since.ts = prevMinute
-    console.log('this:', format(thisMinute, 'H:mm:ss:SSS'), 'prev:', format(since.ts, 'H:mm:ss:SSS'))
+    // console.log('this:', format(thisMinute, 'H:mm:ss:SSS'), 'prev:', format(since.ts, 'H:mm:ss:SSS'))
 
     // do bulkPut - idempotent opLog merge
     if (fetchedMods?.length) {
@@ -115,9 +65,9 @@ export const opLogRollup = async (force = false, forceSinceZero = false) => {
         console.log('modKeysKnown', modKeysKnown.length)
         console.log('unknown', unknownMods)
         await modDB.Mods.bulkPut(unknownMods)
-        await applyMods(unknownMods)
+        await applyMods(unknownMods, todoDB)
       } else {
-        console.log('all mods already known', modKeysKnown.length)
+        // console.log('all mods already known', modKeysKnown.length)
       }
     }
   }

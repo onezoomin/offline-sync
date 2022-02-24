@@ -10,7 +10,7 @@ export const checkWorker = (...msg) => {
 }
 checkWorker('top of worker')
 
-// hack to avoid overlay.ts's dom assumptions
+// hack to avoid overlay.ts's dom assumptions inspired by https://stackoverflow.com/questions/58672942/htmlelement-is-not-defined-nativescript-vue
 self.HTMLElement = function () {
   return {}
 }
@@ -56,45 +56,7 @@ self.onmessage = async (e) => {
       // todoDB[eachTableName].hook('deleting', getDeletingHookForTable(eachTableName))
       }
 
-      const bygonzConfig: any = { // const { DBCore, Middleware } = await import('dexie')
-        stack: 'dbcore', // The only stack supported so far.
-        name: 'bygonz', // Optional name of your middleware
-        create (downlevelDatabase) {
-        // console.log('ww create in use.create', downlevelDatabase)
-        // Return your own implementation of DBCore:
-          return {
-          // Copy default implementation.
-            ...downlevelDatabase,
-            // Override table method
-            table (tableName) {
-            // Call default table method
-              const downlevelTable = downlevelDatabase.table(tableName)
-              // Derive your own table from it:
-              return {
-              // Copy default table implementation:
-                ...downlevelTable,
-                // Override the mutate method:
-                mutate: req => {
-                // Copy the request object
-                  const myRequest = { ...req }
-                  // Do things before mutate, then
-                  console.log('dbcore mut in ww', myRequest)
-                  // call downlevel mutate:
-                  return downlevelTable.mutate(myRequest).then(res => {
-                  // Do things after mutate
-                    const myResponse = { ...res }
-                    // Then return your response:
-                    return myResponse
-                  })
-                },
-              }
-            },
-          }
-        },
-      }
-
       const setupWWDB = async () => {
-        todoDB.use(bygonzConfig)
         checkWorker(utcMsTs(), 'todoDB with hooks', todoDB)
 
         fetchAndApplyMods = async () => {

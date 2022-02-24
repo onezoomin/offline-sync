@@ -2,7 +2,6 @@ import { TaskStatus } from '../Model/TaskStatus'
 import { CompoundKeyNumStr, Task, TaskParams, TaskVM } from './../Model/Task'
 import { modDB, utcMsTs } from './bygonz'
 import { todoDB } from './dexie'
-import { userAddress } from './wallet'
 // const todoDB = new TodoDB()
 
 // const getTaskStates = async function getTaskStates () {
@@ -18,9 +17,10 @@ import { userAddress } from './wallet'
 
 export const addActiveTask = async (newTask: TaskParams) => {
   console.log('adding', newTask)
-  await todoDB.ActiveTasks.add(newTask)
+  await todoDB.ActiveTasks.put(newTask)
 }
-export const updateActiveTask = async (taskToUpdate: Task) => await todoDB.ActiveTasks.put(new Task({ ...taskToUpdate, owner: userAddress, modified: utcMsTs() }))
+export const updateActiveTask = async (taskToUpdate: Task) => await todoDB.ActiveTasks.update(TaskVM.getCompoundKey(taskToUpdate), { task: taskToUpdate.task, modified: utcMsTs() })
+// export const updateActiveTask = async (taskToUpdate: Task) => await todoDB.ActiveTasks.put(new Task({ ...taskToUpdate, modified: utcMsTs() }))
 export const delActiveTask = async (idToDelete: CompoundKeyNumStr) => await todoDB.ActiveTasks.delete(idToDelete)
 export const delCompletedTask = async (idToDelete: CompoundKeyNumStr) => await todoDB.CompletedTasks.delete(idToDelete)
 export const completeActiveTask = async (cTask: Task) => cTask

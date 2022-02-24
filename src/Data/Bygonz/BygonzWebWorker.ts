@@ -1,5 +1,5 @@
 
-import { checkWorker, utcMsTs } from './WebWorkerImports/Utils'
+import { BYGONZ_MUTATION_EVENT_NAME, checkWorker, utcMsTs } from './WebWorkerImports/Utils'
 // checkWorker('top of bygonz worker')
 
 // hack to avoid overlay.ts's dom assumptions
@@ -45,20 +45,20 @@ self.onmessage = async (e) => {
       // void dgraphMod(modLogEntry)
     }
 
-    const { getCreatingHookForTable, getDeletingHookForTable, getUpdateHookForTable } = await import('./WebWorkerImports/Hooks.ts')
+    // const { getCreatingHookForTable, getDeletingHookForTable, getUpdateHookForTable } = await import('./WebWorkerImports/Hooks.ts')
 
-    const getTableHooks = {
-      updating: getUpdateHookForTable,
-      creating: getCreatingHookForTable,
-      deleting: getDeletingHookForTable,
-    }
-    const objThatOnlyLivesHere: Record<string, (tableName: any) => (modifications: any, forKey: any, obj: any) => void> = {}
-    for (const { name: eachTableName } of targetDB.tables) {
-      for (const eachEvent of Object.keys(getTableHooks)) {
-        objThatOnlyLivesHere[`${eachTableName}_${eachEvent}}`] = (getTableHooks[eachEvent](eachTableName, commitMod)).bind(self);
-        (targetDB[eachTableName]).hook(eachEvent, objThatOnlyLivesHere[`${eachTableName}_${eachEvent}}`])
-      }
-    }
+    // const getTableHooks = {
+    //   updating: getUpdateHookForTable,
+    //   creating: getCreatingHookForTable,
+    //   deleting: getDeletingHookForTable,
+    // }
+    // const objThatOnlyLivesHere: Record<string, (tableName: any) => (modifications: any, forKey: any, obj: any) => void> = {}
+    // for (const { name: eachTableName } of targetDB.tables) {
+    //   for (const eachEvent of Object.keys(getTableHooks)) {
+    //     objThatOnlyLivesHere[`${eachTableName}_${eachEvent}}`] = (getTableHooks[eachEvent](eachTableName, commitMod)).bind(self);
+    //     (targetDB[eachTableName]).hook(eachEvent, objThatOnlyLivesHere[`${eachTableName}_${eachEvent}}`])
+    //   }
+    // }
     const addTask = async () => {
       const ts = utcMsTs()
       const task = `${ts} ww create ${(Math.random() * 2000).toFixed(0)}`
@@ -67,40 +67,38 @@ self.onmessage = async (e) => {
     void addTask()
     setTimeout(addTask, 1500)
 
-    const { default: { liveQuery } } = await import('dexie')
+    // const { default: { liveQuery } } = await import('dexie')
 
-    class Signal {
-      promise = new Promise(resolve => this.resolve = resolve)
-    }
+    // class Signal {
+    //   promise = new Promise(resolve => this.resolve = resolve)
+    // }
 
-    const signal = new Signal()
-    const subscription = liveQuery(() => targetDB?.ActiveTasks?.toArray()).subscribe(result => {
-      console.log(result)
+    // const signal = new Signal()
+    // const subscription = liveQuery(() => targetDB?.ActiveTasks?.orderBy('modified').toArray()).subscribe(result => {
+    //   console.log(result)
 
-      signal.resolve(result)
-    })
-    const result = await signal.promise
-    console.log(subscription, result)
+    //   signal.resolve(result)
+    // })
+    // const result = await signal.promise
+    // console.log(subscription, result)
 
     // https://github.com/dexie/Dexie.js/blob/master/src/globals/global-events.ts
     const DEXIE_STORAGE_MUTATED_EVENT_NAME = 'storagemutated' as 'storagemutated'
     const STORAGE_MUTATED_DOM_EVENT_NAME = 'x-storagemutated-1'
 
     // https://github.com/dexie/Dexie.js/blob/master/src/live-query/enable-broadcast.ts
-    const bc = new BroadcastChannel(STORAGE_MUTATED_DOM_EVENT_NAME)
+    const bc = new BroadcastChannel(BYGONZ_MUTATION_EVENT_NAME)
 
-    targetDB.on('storagemutated', (ev) => {
-      console.log('storagemutated', ev)
-    })
+    // targetDB.on('storagemutated', (ev) => {
+    //   console.log('storagemutated', ev)
+    // })
 
     bc.onmessage = (ev) => {
       // if (ev.data) propagateLocally(ev.data);
-      console.log(ev)
+      console.log('bygonz afterEffect', ev, utcMsTs())
 
-      const { data } = ev
-      for (const eachKey of Object.keys(data)) {
-        console.log(eachKey, data[eachKey])
-      }
+      const { data: modEntry } = ev
+      commitMod(modEntry)
     }
   } // </init
 }

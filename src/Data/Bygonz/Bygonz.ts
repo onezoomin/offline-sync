@@ -1,4 +1,5 @@
 import { Dexie } from 'dexie'
+import { getBygonzMiddlwareFor } from './BygonzMiddleware'
 
 // import BygonzWorker from './BygonzWebWorker?worker&inline'
 // const { default: BygonzWorker } = await import('./BygonzWebWorker?worker')
@@ -40,6 +41,7 @@ export default class BygonzDexie extends Dexie {
     this.mappings = mappings
     this.doMappings()
 
+    this.use(getBygonzMiddlwareFor(this))
     void this.spawnWorker()
   }
 }

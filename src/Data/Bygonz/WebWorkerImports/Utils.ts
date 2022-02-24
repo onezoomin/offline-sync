@@ -16,3 +16,5 @@ export function utcMsTs (): number {
   precision = newPrecision === precision ? newPrecision + 1 : newPrecision // ensure 1ms difference - basically
   return appStartTimeStamp + precision + (now.getTimezoneOffset() * 60 * 1000)
 }
+
+export const BYGONZ_MUTATION_EVENT_NAME = 'bygonzmutation'

@@ -1,49 +1,49 @@
-import { DBCore, DBCoreAddRequest, DBCoreDeleteRangeRequest, DBCoreDeleteRequest, DBCorePutRequest, Middleware } from 'dexie'
+import { DBCore, DBCoreAddRequest, DBCoreDeleteRangeRequest, DBCoreDeleteRequest, DBCorePutRequest, Middleware, Table } from 'dexie'
 import { Operations } from './WebWorkerImports/Mods'
 import { BYGONZ_MUTATION_EVENT_NAME, utcMsTs } from './WebWorkerImports/Utils'
-const getAfterEffectsFor = (instantiatedDBRef, tableName) => {
-  console.log('getAfterEffectsFor', instantiatedDBRef)
+const getAfterEffectsFor = (tableName) => {
+  // console.log('getAfterEffectsFor', tableName)
   const bc = new BroadcastChannel(BYGONZ_MUTATION_EVENT_NAME)
+
   return {
-    add (reqCopy: DBCoreAddRequest | DBCorePutRequest) {
-      const obj = reqCopy.values[0]
-      const forKey = [obj.created, obj.owner] // TODO needs to come from or be inferred from trans
-      const modified = obj.modified
-      const modLogEntry = {
-        ts: modified,
-        tableName,
-        forKey,
-        owner: obj.owner,
-        modifier: obj.owner,
-        op: Operations.CREATE,
-        log: {
-          obj,
-        },
-      }
-      console.log('dbcore add', utcMsTs())
-      bc.postMessage(modLogEntry)
+    add (reqCopy: (DBCoreAddRequest | DBCorePutRequest) & { keys: any[]}) {
+      // console.log('dbcore add', reqCopy)
+      const { keys, values } = reqCopy
+      values.forEach((eachObj, idx) => {
+        const eachKey = keys[idx]
+        const modified = eachObj.modified
+        const modLogEntry = {
+          ts: modified,
+          tableName,
+          forKey: eachKey,
+          owner: eachObj.owner,
+          modifier: eachObj.owner,
+          op: Operations.CREATE,
+          log: {
+            obj: eachObj,
+          },
+        }
+        bc.postMessage(modLogEntry)
+      })
     },
-    put  (reqCopy: DBCorePutRequest) {
-      const obj = reqCopy.values[0]
-      const forKey = [obj.created, obj.owner]
-
-      const modifications = reqCopy.changeSpec
-
-      const { modified: modFromChange, ...put } = modifications
+    put  (reqCopy: DBCorePutRequest & { keys: any[]}, obj: any) {
+      console.log('dbcore put', reqCopy)
+      const forKey = reqCopy.keys[0]
+      const put = reqCopy.changeSpec
       const revert = {}
       for (const eachKey in put) {
         revert[eachKey] = obj[eachKey]
       }
 
-      const modified = Math.max(modFromChange || 0, utcMsTs())
-      const updatedObj = { ...obj, ...modifications }
+      const updatedObj = { ...obj, ...put }
+      const modified = updatedObj.modified
 
       const modLogEntry = {
         ts: modified,
         tableName,
         forKey,
         owner: obj.owner,
-        modifier: obj.owner, // TODO userAddress, https://github.com/dexie/Dexie.js/blob/e865e80a3c05821db40ecc3c64157104d345b11e/addons/dexie-cloud/src/middlewares/createMutationTrackingMiddleware.ts#L81
+        modifier: obj.modifier ?? obj.owner ?? '??', // TODO userAddress, https://github.com/dexie/Dexie.js/blob/e865e80a3c05821db40ecc3c64157104d345b11e/addons/dexie-cloud/src/middlewares/createMutationTrackingMiddleware.ts#L81
         op: Operations.UPDATE,
         log: {
           put,
@@ -53,10 +53,10 @@ const getAfterEffectsFor = (instantiatedDBRef, tableName) => {
       }
       console.log('dbcore put', modLogEntry)
     },
-    async delete (reqCopy: DBCoreDeleteRequest, obj) {
+    async delete (reqCopy: DBCoreDeleteRequest & {tableRef: Table}, obj) {
       const ts = utcMsTs()
       const forKey = reqCopy.keys[0]
-
+      console.log('dbcore ae delete', reqCopy, obj)
       const modLogEntry = {
         ts,
         tableName,
@@ -69,9 +69,10 @@ const getAfterEffectsFor = (instantiatedDBRef, tableName) => {
         },
       }
       console.log('dbcore delete', modLogEntry)
+      bc.postMessage(modLogEntry)
     },
     deleteRange (reqCopy: DBCoreDeleteRangeRequest) {
-      console.log('dbcore deleteRange', reqCopy)
+      console.log('dbcore deleteRange - not broadcasting...yet', reqCopy)
     },
   }
 }
@@ -109,13 +110,15 @@ export const getBygonzMiddlwareFor = (instantiatedDBRef): Middleware<DBCore> => 
       table (tableName) {
       // Call default table method
         const downlevelTable = downlevelDatabase.table(tableName)
-        // Derive your own table from it:
 
-        afterEffects = getAfterEffectsFor(instantiatedDBRef, tableName)
+        const tableRef = instantiatedDBRef[tableName]
+        afterEffects = getAfterEffectsFor(tableName)
 
         const mutate = async req => {
-          // Copy the request object
-          const myRequest = { ...req }
+          // Copy the request object and tag on tableRef
+          const myRequest = { ...req, tableRef }
+
+          // get the type from the req
           const { type } = myRequest
 
           // console.log('dbcore mut', myRequest)
@@ -131,14 +134,30 @@ export const getBygonzMiddlwareFor = (instantiatedDBRef): Middleware<DBCore> => 
                 console.log('ae callback', completeEvent)
                 afterEffects.add(myRequest)
               }
+            } else {
+              // const newObj = myRequest.values[0]
+              const forKey = myRequest.keys[0]
+              const obj = await tableRef.get(forKey) // TODO avoid inside info about key - maybe via casting or https://dexie.org/docs/Collection/Collection.primaryKeys()
+              console.log('dbcore pre put', tableRef, obj)
+              afterEffectCallback = (completeEvent: Event) => {
+                console.log('ae callback', completeEvent)
+                afterEffects.put(myRequest, obj)
+              }
             }
           }
           if (type === 'delete') {
-            const obj = await instantiatedDBRef[tableName].get(myRequest.keys[0])
-            console.log('dbcore pre delete', instantiatedDBRef, obj)
+            const forKey = myRequest.keys[0]
+            const deletedObj = await myRequest.tableRef.get(forKey)
+            console.log('dbcore pre delete', myRequest.tableRef, deletedObj)
+
             afterEffectCallback = (completeEvent: Event) => {
               console.log('ae callback', completeEvent)
-              afterEffects.delete(myRequest, obj)
+              afterEffects.delete(myRequest, deletedObj)
+            }
+            if (!deletedObj) {
+              afterEffectCallback = (completeEvent: Event) => {
+                console.log('ae skipping delete missing obj', completeEvent)
+              }
             }
           }
 
@@ -158,6 +177,8 @@ export const getBygonzMiddlwareFor = (instantiatedDBRef): Middleware<DBCore> => 
             return myResponse
           })
         }
+
+        // Return your extended table:
         return {
         // Copy default table implementation:
           ...downlevelTable,

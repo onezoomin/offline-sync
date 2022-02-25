@@ -39,22 +39,21 @@ self.onmessage = async (e) => {
       const { todoDB } = await import('./dexie')
       todoDBwwRef = todoDB
       // checkWorker(utcMsTs(), 'todoDB', todoDB)
-      const { getCreatingHookForTable, getDeletingHookForTable, getUpdateHookForTable, opLogRollup } = await import('./dexie-sync-hooks')
 
-      const getTableHooks = {
-        updating: getUpdateHookForTable,
-        creating: getCreatingHookForTable,
-        deleting: getDeletingHookForTable,
-      }
-      const objThatOnlyLivesHere: Record<string, (tableName: any) => (modifications: any, forKey: any, obj: any) => void> = {}
-      for (const { name: eachTableName } of todoDB.tables) {
-        for (const eachEvent of ['updating', 'creating', 'deleting']) {
-          objThatOnlyLivesHere[`${eachTableName}_${eachEvent}}`] = (getTableHooks[eachEvent](eachTableName)).bind(self);
-          (todoDB[eachTableName] as Table).hook(eachEvent, objThatOnlyLivesHere[`${eachTableName}_${eachEvent}}`])
-        }
-      // todoDB[eachTableName].hook('creating', getCreatingHookForTable(eachTableName))
-      // todoDB[eachTableName].hook('deleting', getDeletingHookForTable(eachTableName))
-      }
+      // const { getCreatingHookForTable, getDeletingHookForTable, getUpdateHookForTable } = await import('./WebWorkerImports/Hooks.ts')
+
+      // const getTableHooks = {
+      //   updating: getUpdateHookForTable,
+      //   creating: getCreatingHookForTable,
+      //   deleting: getDeletingHookForTable,
+      // }
+      // const objThatOnlyLivesHere: Record<string, (tableName: any) => (modifications: any, forKey: any, obj: any) => void> = {}
+      // for (const { name: eachTableName } of targetDB.tables) {
+      //   for (const eachEvent of Object.keys(getTableHooks)) {
+      //     objThatOnlyLivesHere[`${eachTableName}_${eachEvent}}`] = (getTableHooks[eachEvent](eachTableName, commitMod)).bind(self);
+      //     (targetDB[eachTableName]).hook(eachEvent, objThatOnlyLivesHere[`${eachTableName}_${eachEvent}}`])
+      //   }
+      // }
 
       const setupWWDB = async () => {
         checkWorker(utcMsTs(), 'todoDB with hooks', todoDB)

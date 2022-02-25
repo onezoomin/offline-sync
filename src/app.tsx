@@ -4,7 +4,7 @@ import { Image } from 'mui-image'
 import { h } from 'preact'
 import Footer from './Components/Footer'
 import { FlexRow } from './Components/Minis'
-import ActiveTask from './Components/Tasks/ActiveTask'
+import ActiveTasks from './Components/Tasks/ActiveTask'
 import AddTasks from './Components/Tasks/AddTasks'
 import CompletedTask from './Components/Tasks/CompletedTask'
 import { userAddress } from './Data/wallet'
@@ -34,7 +34,7 @@ export const App = () => {
       <div className="container mx-auto lg:w-1/2">
         <h1 className="text-5xl">Todo App - {userAddress.slice(0, 5)} </h1>
         <AddTasks />
-        <ActiveTask />
+        <ActiveTasks />
         <hr />
         <CompletedTask />
         <Footer />

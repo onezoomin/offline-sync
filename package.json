@@ -10,6 +10,12 @@
     "lint": "eslint src/**/*.ts[x] --fix",
     "clean": "rm -rf .cache .tmp lib build"
   },
+  "pnpm": {
+    "overrides": {
+      "dexie": "/Volumes/Stripe/Dev/Dexie.js",
+      "dexie-react-hooks": "/Volumes/Stripe/Dev/Dexie.js/libs/dexie-react-hooks"
+    }
+  },
   "dependencies": {
     "@apollo/client": "^3.5.9",
     "@apollo/link-ws": "^2.0.0-beta.3",
@@ -23,7 +29,7 @@
     "axios": "^0.26.0",
     "buffer": "^6.0.3",
     "date-fns": "^2.28.0",
-    "dexie": "^3.2.1",
+    "dexie": "^4.0.0-alpha.1",
     "dexie-react-hooks": "^1.1.1",
     "diff": "^5.0.0",
     "diff-lines": "^1.1.1",
@@ -43,6 +49,7 @@
     "process": "^0.11.10",
     "prop-types": "^15.8.1",
     "random-access-memory": "^4.0.0",
+    "react-use": "^17.3.2",
     "replicache": "^8.0.3",
     "replicache-react": "^2.5.0",
     "rollup-plugin-polyfill-node": "^0.8.0",

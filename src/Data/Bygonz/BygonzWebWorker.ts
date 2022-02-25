@@ -33,32 +33,20 @@ self.onmessage = async (e) => {
       checkWorker('already opened ->', targetDB)
     }
     const { getModDB } = await import('./WebWorkerImports/Mods.ts')
+    const { dgraphMod, fetchAndApplyMods } = await import('./WebWorkerImports/dgraph-socket')
     modDB = await getModDB()
     checkWorker('mod ->', modDB)
 
     const modTable = modDB.Mods
 
-    const commitMod = (modLogEntry) => {
+    const commitMod = async (modLogEntry) => {
       // if (hookState.isSuspended) return // console.log('skipping commit')
 
-      void modTable.add(modLogEntry)
-      // void dgraphMod(modLogEntry)
+      void modTable.put(modLogEntry)
+      await dgraphMod(modLogEntry)
+      fetchAndApplyMods(modDB, targetDB)
     }
-
-    // const { getCreatingHookForTable, getDeletingHookForTable, getUpdateHookForTable } = await import('./WebWorkerImports/Hooks.ts')
-
-    // const getTableHooks = {
-    //   updating: getUpdateHookForTable,
-    //   creating: getCreatingHookForTable,
-    //   deleting: getDeletingHookForTable,
-    // }
-    // const objThatOnlyLivesHere: Record<string, (tableName: any) => (modifications: any, forKey: any, obj: any) => void> = {}
-    // for (const { name: eachTableName } of targetDB.tables) {
-    //   for (const eachEvent of Object.keys(getTableHooks)) {
-    //     objThatOnlyLivesHere[`${eachTableName}_${eachEvent}}`] = (getTableHooks[eachEvent](eachTableName, commitMod)).bind(self);
-    //     (targetDB[eachTableName]).hook(eachEvent, objThatOnlyLivesHere[`${eachTableName}_${eachEvent}}`])
-    //   }
-    // }
+    fetchAndApplyMods(modDB, targetDB, true)
     const addTask = async () => {
       const ts = utcMsTs()
       const task = `${ts} ww create ${(Math.random() * 2000).toFixed(0)}`
@@ -98,7 +86,7 @@ self.onmessage = async (e) => {
       console.log('bygonz afterEffect', ev, utcMsTs())
 
       const { data: modEntry } = ev
-      commitMod(modEntry)
+      void commitMod(modEntry)
     }
   } // </init
 }

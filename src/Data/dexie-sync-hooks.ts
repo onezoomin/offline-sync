@@ -9,7 +9,7 @@ import { TaskVM } from '../Model/Task'
 import { ModVM } from './../Model/Mod'
 import { EpochDB, modDB, utcMsTs } from './bygonz'
 import { applyMods, hookState } from './Bygonz/mod-utils'
-import { fetchMods } from './dgraph-socket'
+import { fetchMods } from './Bygonz/WebWorkerImports/dgraph-socket'
 import { checkWorker, userAddress } from './WebWorker'
 
 // TODO consider reasons DBcore is superior to the hooks API:
@@ -137,52 +137,6 @@ export const dgraphUpsert = async (task) => {
   console.timeEnd('sendTask dgraph')
 }
 
-export const dgraphMod = async (modIsh: any, modJson = (new ModVM(modIsh)).forGql()) => {
-  checkWorker('dgraphMod')
-  const hookStateRef = hookState
-  if (hookStateRef.isSuspended) return // console.log('skipping commitMod')
-
-  let response
-  console.time('sendMod dgraph')
-  // console.log('mod json obj:\n', modIsh)
-
-  const data = {
-    query: `mutation ($mod: [AddModInput!]!) {
-      addMod(input: $mod) {
-        mod {
-          key
-          ts
-          tableName 
-          forKey
-          owner 
-          modifier 
-          op
-          log
-        }
-      }
-    }`,
-    variables: {
-      mod: modJson,
-    },
-  }
-  // console.log('add mod mutation :\n', data)
-  try {
-    response = await axios({
-      method: 'post',
-      url: 'https://dghttp.zt.ax/graphql',
-      data,
-      headers: { 'Content-Type': 'application/json' },
-    })
-    if (response.data.errors) {
-      console.error(response.data)
-    } else {
-      // console.log(response.data)
-    }
-  } catch (e) {
-    console.error(e)
-  }
-  console.timeEnd('sendMod dgraph')
-}
 export const n8nUpsert = async (task: any) => {
   const hookStateRef = hookState
   if (hookStateRef.isSuspended) return // console.log('skipping n8nUpsert')

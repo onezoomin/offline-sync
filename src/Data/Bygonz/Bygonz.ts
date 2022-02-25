@@ -13,7 +13,7 @@ export default class BygonzDexie extends Dexie {
   private async spawnWorker () {
     console.log('spawning')
 
-    if (self.document === undefined) return console.log('avoiding infinite loop')
+    if (self.document === undefined) { console.log('avoiding infinite loop') }
 
     const { default: BygonzWorker } = await import('./BygonzWebWorker?worker&inline')
     this.workerApi = new BygonzWorker()
@@ -41,8 +41,11 @@ export default class BygonzDexie extends Dexie {
     this.mappings = mappings
     this.doMappings()
 
-    this.use(getBygonzMiddlwareFor(this))
-    void this.spawnWorker()
+    if (self.document !== undefined) {
+      console.log('ui side, setting up middleware and spawning worker')
+      this.use(getBygonzMiddlwareFor(this))
+      void this.spawnWorker()
+    }
   }
 }
 

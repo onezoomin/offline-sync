@@ -3,7 +3,7 @@ import DeleteForeverIcon from '@mui/icons-material/DeleteForever'
 import { IconButton } from '@mui/material'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { h } from 'preact'
-import { useRef } from 'preact/hooks'
+import { useRef, useState } from 'preact/hooks'
 import { ActiveTasksQuery, completeActiveTask, delActiveTask, ModificationsQuery, updateActiveTask } from '../../Data/data'
 import { Task, TaskVM } from '../../Model/Task'
 import Editable from '../Editable'
@@ -14,8 +14,14 @@ function TaskMods ({ task: { id } }) {
     !mods.length ? null : <div>{mods.length}</div>
   )
 }
-export default function ActiveTask () {
-  const ActiveTasks = useLiveQuery(ActiveTasksQuery) ?? []
+export default function ActiveTasks () {
+  const [isDirty, setIsDirty] = useState(false)
+  // const activeTasks = useObservable<TaskVM[]>(liveQuery(ActiveTasksQuery)) ?? [] // constant rerender loop
+
+  const activeTasks = useLiveQuery(ActiveTasksQuery, [isDirty]) ?? []
+  activeTasks.reverse()
+  console.log('rendering', activeTasks)
+  // isDirty && setIsDirty(false)
 
   const onCheck = (checkedTask: Task) => {
     console.log(checkedTask)
@@ -23,6 +29,7 @@ export default function ActiveTask () {
   }
   const onDelete = (deletedTask: TaskVM) => {
     void delActiveTask(deletedTask.id)
+    setIsDirty(true)
   }
   const inputRef = useRef<any>()
 
@@ -30,10 +37,10 @@ export default function ActiveTask () {
     task.task = newVal
     void updateActiveTask(task)
   }
-
+  // setTimeout(() => { setIsDirty(true) }, 1500)
   return (
     <div class="container overflow-y:auto mx-auto mb-5">
-      {ActiveTasks?.map((task: TaskVM, i) => {
+      {activeTasks?.map((task: TaskVM, i) => {
         const id = task.id ?? i
         return (
           <div key={id} class="flex flex-wrap px-5 md:px-20">
@@ -49,7 +56,7 @@ export default function ActiveTask () {
                 childRef={inputRef}
                 onEnter = {(e: KeyboardEvent) => updateTask(task, (e.target as HTMLInputElement)?.value)}
             />
-            <TaskMods {...{ task }} />
+            {/* <TaskMods {...{ task }} /> */}
             <IconButton onClick={() => onDelete(task)}>
               <DeleteForeverIcon />
             </IconButton>

@@ -34,7 +34,7 @@ const yamlOptions = {
 const since = {
   ts: 0,
 }
-export const opLogRollup = async (force = false, forceSinceZero = false) => {
+const opLogRollup = async (force = false, forceSinceZero = false) => {
   const nownow = utcMsTs()
   const nowDate = fromUnixTime(nownow / 1000)
   const prevMinute = set(nowDate, { minutes: getMinutes(nowDate) - 1, seconds: 0, milliseconds: 0 }).getTime()
@@ -93,7 +93,7 @@ export const opLogRollup = async (force = false, forceSinceZero = false) => {
   }
 }
 
-export const dgraphUpsert = async (task) => {
+const dgraphUpsert = async (task) => {
   checkWorker('dgraphUpsert async called from hook')
   const hookStateRef = hookState
   if (hookStateRef.isSuspended) return // console.log('skipping dgraphUpsert')
@@ -137,7 +137,7 @@ export const dgraphUpsert = async (task) => {
   console.timeEnd('sendTask dgraph')
 }
 
-export const n8nUpsert = async (task: any) => {
+const n8nUpsert = async (task: any) => {
   const hookStateRef = hookState
   if (hookStateRef.isSuspended) return // console.log('skipping n8nUpsert')
   let response
@@ -162,7 +162,7 @@ export const n8nUpsert = async (task: any) => {
   }
   console.timeEnd('addTask n8n')
 }
-export const getUpdateHookForTable = (tableName) => {
+const getUpdateHookForTable = (tableName) => {
   checkWorker('create update hook')
   const upFx = function updHook (modifications, forKey, obj/* , transaction */) {
     checkWorker('call update hook')
@@ -210,7 +210,7 @@ export const getUpdateHookForTable = (tableName) => {
   return upFx
 }
 
-export const getCreatingHookForTable = (tableName) => {
+const getCreatingHookForTable = (tableName) => {
   const addFx = function addHook (forKey, obj /*, transaction */) {
     const hookStateRef = hookState
     if (hookStateRef.isSuspended) return // console.log('skipping addHook')
@@ -235,7 +235,7 @@ export const getCreatingHookForTable = (tableName) => {
   return addFx
 }
 
-export const getDeletingHookForTable = (tableName) => {
+const getDeletingHookForTable = (tableName) => {
   const delFx = function delHook (forKey, obj/* , transaction */) {
     if (hookState.isSuspended) return // console.log('skipping delHook')
     // console.log(transaction)

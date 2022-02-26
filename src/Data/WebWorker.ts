@@ -22,12 +22,10 @@ self.customElements = {
 
 export let todoDBwwRef
 export let fetchAndApplyMods
-export let userAddress: string = 'premessage'
 
 self.onmessage = async (e) => {
   if (e.data.cmd === 'init') {
     checkWorker('on message in bygonz worker', e)
-    userAddress = e.data.userAddress
     // try {
 
     // } catch (error) {

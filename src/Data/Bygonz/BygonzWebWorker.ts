@@ -42,7 +42,7 @@ self.onmessage = async (e) => {
     const commitMod = async (modLogEntry) => {
       // if (hookState.isSuspended) return // console.log('skipping commit')
 
-      void modTable.put(modLogEntry)
+      await modTable.put(modLogEntry)
       await dgraphMod(modLogEntry)
       void fetchAndApplyMods(modDB, targetDB)
     }

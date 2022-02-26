@@ -2,8 +2,8 @@ import { DBCore, DBCoreAddRequest, DBCoreDeleteRangeRequest, DBCoreDeleteRequest
 import { Operations } from './WebWorkerImports/Mods'
 import { BYGONZ_MUTATION_EVENT_NAME, utcMsTs } from './WebWorkerImports/Utils'
 const getAfterEffectsFor = (tableName) => {
-  // console.log('getAfterEffectsFor', tableName)
   const bc = new BroadcastChannel(BYGONZ_MUTATION_EVENT_NAME)
+  console.log('getAfterEffectsFor', tableName, bc)
 
   return {
     add (reqCopy: (DBCoreAddRequest | DBCorePutRequest) & { keys: any[]}) {
@@ -52,6 +52,7 @@ const getAfterEffectsFor = (tableName) => {
         },
       }
       console.log('dbcore put', modLogEntry)
+      bc.postMessage(modLogEntry)
     },
     async delete (reqCopy: DBCoreDeleteRequest & {tableRef: Table}, obj) {
       const ts = utcMsTs()
@@ -86,25 +87,6 @@ export const getBygonzMiddlwareFor = (instantiatedDBRef): Middleware<DBCore> => 
     return {
     // Copy default implementation.
       ...downlevelDatabase,
-      // Override transaction method
-      // transaction (tables, mode, ...args) {
-      //   // Call default transaction method
-      //   const downlevelTrans: DBCoreTransaction & {callAfter?: Function } = downlevelDatabase.transaction(tables, mode, ...args)
-
-      //   const myTrans = { ...downlevelTrans }
-      //   console.log(downlevelTrans.callAfter, myTrans.callAfter, 'dbcore downlevelTrans', downlevelTrans)
-      //   if (mode === 'readwrite') {
-      // setTimeout(() => {
-      //   if (downlevelTrans.callAfter !== undefined) {
-      //     // downlevelTrans.callAfter.call(null, downlevelTrans)
-      //     downlevelTrans.addEventListener('complete', downlevelTrans.callAfter)
-      //   }
-      //   // console.log(downlevelTrans.callAfter, 'dbcore downlevelTrans', downlevelTrans)
-      // }, 5)
-      //   }
-      //   // Derive your own transaction from it:
-      //   return downlevelTrans
-      // },
 
       // Override table method
       table (tableName) {
@@ -120,10 +102,11 @@ export const getBygonzMiddlwareFor = (instantiatedDBRef): Middleware<DBCore> => 
 
           // get the type from the req
           const { type } = myRequest
+          const { primaryKey } = downlevelTable.schema
 
           // console.log('dbcore mut', myRequest)
           let afterEffectCallback = (completeEvent: Event) => {
-            console.log('ae callback', type, completeEvent)
+            // console.log('ae callback', type, completeEvent)
             afterEffects[type](myRequest)
           }
           if (type === 'add') {
@@ -131,7 +114,7 @@ export const getBygonzMiddlwareFor = (instantiatedDBRef): Middleware<DBCore> => 
             if (myRequest.keys?.length) {
               forKey = myRequest.keys[0]
             } else {
-              forKey = downlevelTable?.schema?.primaryKey?.extractKey(myRequest.values[0])
+              forKey = primaryKey?.extractKey(myRequest.values[0])
               myRequest.keys = [forKey]
               console.log('dbcore pre add didnt find key, needed to extract', tableRef, myRequest)
             }
@@ -142,15 +125,15 @@ export const getBygonzMiddlwareFor = (instantiatedDBRef): Middleware<DBCore> => 
             if (myRequest.keys?.length) {
               forKey = myRequest.keys[0]
             } else {
-              console.log('dbcore pre put didnt find key, needed to extract', tableRef, myRequest)
-              forKey = downlevelTable?.schema?.primaryKey?.extractKey(myRequest.values[0])
+              forKey = primaryKey?.extractKey(myRequest.values[0])
               myRequest.keys = [forKey]
+              console.log('dbcore pre put didnt find key, needed to extract', tableRef, myRequest)
             }
             const isActuallyPut = !!(myRequest.changeSpec) // TODO check reliability
             if (!isActuallyPut) {
               console.log('dbcore put used as add not update, calling add instead')
               afterEffectCallback = (completeEvent: Event) => {
-                console.log('ae callback', completeEvent)
+                // console.log('ae callback', completeEvent)
                 afterEffects.add(myRequest)
               }
             } else {
@@ -159,7 +142,7 @@ export const getBygonzMiddlwareFor = (instantiatedDBRef): Middleware<DBCore> => 
               const obj = await tableRef.get(forKey)
 
               afterEffectCallback = (completeEvent: Event) => {
-                console.log('ae callback', completeEvent)
+                // console.log('ae callback', completeEvent)
                 afterEffects.put(myRequest, obj)
               }
             }
@@ -170,7 +153,7 @@ export const getBygonzMiddlwareFor = (instantiatedDBRef): Middleware<DBCore> => 
             console.log('dbcore pre delete', myRequest.tableRef, deletedObj)
 
             afterEffectCallback = (completeEvent: Event) => {
-              console.log('ae callback', completeEvent)
+              // console.log('ae callback', completeEvent)
               afterEffects.delete(myRequest, deletedObj)
             }
             if (!deletedObj) {
@@ -180,8 +163,6 @@ export const getBygonzMiddlwareFor = (instantiatedDBRef): Middleware<DBCore> => 
             }
           }
 
-          // myRequest.trans.callAfter = afterEffectCallback
-          // afterEffectCallback(myRequest.trans)
           // call downlevel mutate:
           // eslint-disable-next-line @typescript-eslint/return-await
           return downlevelTable.mutate(myRequest).then(res => {

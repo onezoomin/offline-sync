@@ -1,7 +1,7 @@
 {
-  "name": "preact-ts-offline-first",
+  "name": "offline-sync",
   "version": "0.8.20",
-  "repository": "https://github.com/st-ax/preact-ts-offline-first",
+  "repository": "https://github.com/onezoomin/offline-sync",
   "license": "CC-BY-NC-4.0",
   "scripts": {
     "dev": "cross-env NODE_ENV=dev vite",
@@ -12,7 +12,7 @@
   },
   "pnpm": {
     "overrides": {
-      "not-dexie": "/Volumes/Stripe/Dev/Dexie.js"
+      "disabled-dexie": "/Volumes/Stripe/Dev/Dexie.js"
     }
   },
   "dependencies": {

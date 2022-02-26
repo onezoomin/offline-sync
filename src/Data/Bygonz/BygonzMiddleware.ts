@@ -126,7 +126,26 @@ export const getBygonzMiddlwareFor = (instantiatedDBRef): Middleware<DBCore> => 
             console.log('ae callback', type, completeEvent)
             afterEffects[type](myRequest)
           }
+          if (type === 'add') {
+            let forKey
+            if (myRequest.keys?.length) {
+              forKey = myRequest.keys[0]
+            } else {
+              forKey = downlevelTable?.schema?.primaryKey?.extractKey(myRequest.values[0])
+              myRequest.keys = [forKey]
+              console.log('dbcore pre add didnt find key, needed to extract', tableRef, myRequest)
+            }
+          }
           if (type === 'put') {
+            console.log('dbcore pre put', tableRef, myRequest)
+            let forKey
+            if (myRequest.keys?.length) {
+              forKey = myRequest.keys[0]
+            } else {
+              console.log('dbcore pre put didnt find key, needed to extract', tableRef, myRequest)
+              forKey = downlevelTable?.schema?.primaryKey?.extractKey(myRequest.values[0])
+              myRequest.keys = [forKey]
+            }
             const isActuallyPut = !!(myRequest.changeSpec) // TODO check reliability
             if (!isActuallyPut) {
               console.log('dbcore put used as add not update, calling add instead')
@@ -136,9 +155,9 @@ export const getBygonzMiddlwareFor = (instantiatedDBRef): Middleware<DBCore> => 
               }
             } else {
               // const newObj = myRequest.values[0]
-              const forKey = myRequest.keys[0]
-              const obj = await tableRef.get(forKey) // TODO avoid inside info about key - maybe via casting or https://dexie.org/docs/Collection/Collection.primaryKeys()
-              console.log('dbcore pre put', tableRef, obj)
+
+              const obj = await tableRef.get(forKey)
+
               afterEffectCallback = (completeEvent: Event) => {
                 console.log('ae callback', completeEvent)
                 afterEffects.put(myRequest, obj)
@@ -164,7 +183,8 @@ export const getBygonzMiddlwareFor = (instantiatedDBRef): Middleware<DBCore> => 
           // myRequest.trans.callAfter = afterEffectCallback
           // afterEffectCallback(myRequest.trans)
           // call downlevel mutate:
-          return await downlevelTable.mutate(myRequest).then(res => {
+          // eslint-disable-next-line @typescript-eslint/return-await
+          return downlevelTable.mutate(myRequest).then(res => {
             // Do things after mutate
             if (myRequest.trans.mode === 'readwrite') {
               // we are not quite through yet, tx could still fail or revert, so adding onComplete listener

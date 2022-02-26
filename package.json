@@ -12,8 +12,7 @@
   },
   "pnpm": {
     "overrides": {
-      "dexie": "/Volumes/Stripe/Dev/Dexie.js",
-      "dexie-react-hooks": "/Volumes/Stripe/Dev/Dexie.js/libs/dexie-react-hooks"
+      "not-dexie": "/Volumes/Stripe/Dev/Dexie.js"
     }
   },
   "dependencies": {

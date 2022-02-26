@@ -12,17 +12,6 @@ import { useDarkMode } from './Utils/react-utils'
 
 export const App = () => {
   const theme = useDarkMode()
-  // useEffect(() => {
-  //   console.log('useEffect', tl)
-  //   const getlt = async () => {
-  //     console.log('calling ww', workerApi)
-
-  //     const add = await workerApi.postMessage({ add: 2 })
-  //     console.log('add ww', add)
-  //     // settl(await workerApi.listTasks())
-  //   }
-  //   void getlt()
-  // }, [tl])
   return (
     <ThemeProvider theme={theme}>
       <FlexRow className="p-4">
@@ -39,15 +28,6 @@ export const App = () => {
         <CompletedTask />
         <Footer />
       </div>
-
-      {/* <FlexRow className="p-4">
-        <Image width={100} src="https://test.broken.url" showLoading
-          errorIcon={
-            <Tooltip arrow title="Broken Image" placement="right-start">
-              <IconButton aria-label="broken"><WarningIcon /></IconButton>
-            </Tooltip>}
-        />
-      </FlexRow> */}
     </ThemeProvider>
   )
 }

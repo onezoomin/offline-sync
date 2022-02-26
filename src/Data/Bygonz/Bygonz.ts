@@ -1,5 +1,5 @@
-import { Dexie } from 'dexie'
 import { getBygonzMiddlwareFor } from './BygonzMiddleware'
+import { Dexie } from 'dexie'
 
 // import BygonzWorker from './BygonzWebWorker?worker&inline'
 // const { default: BygonzWorker } = await import('./BygonzWebWorker?worker')
@@ -40,7 +40,6 @@ export default class BygonzDexie extends Dexie {
     this.stores = stores
     this.mappings = mappings
     this.doMappings()
-
     if (self.document !== undefined) {
       console.log('ui side, setting up middleware and spawning worker')
       this.use(getBygonzMiddlwareFor(this))

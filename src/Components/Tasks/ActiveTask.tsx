@@ -4,6 +4,7 @@ import { IconButton } from '@mui/material'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { h } from 'preact'
 import { useRef, useState } from 'preact/hooks'
+import { utcMsTs } from '../../Data/Bygonz/WebWorkerImports/Utils'
 import { ActiveTasksQuery, completeActiveTask, delActiveTask, ModificationsQuery, updateActiveTask } from '../../Data/data'
 import { Task, TaskVM } from '../../Model/Task'
 import Editable from '../Editable'
@@ -16,11 +17,14 @@ function TaskMods ({ task: { id } }) {
 }
 export default function ActiveTasks () {
   const [isDirty, setIsDirty] = useState(false)
+  const [since, setSince] = useState(utcMsTs())
   // const activeTasks = useObservable<TaskVM[]>(liveQuery(ActiveTasksQuery)) ?? [] // constant rerender loop
+  // const newActiveTasks = useLiveQuery(() => ActiveTasksSinceQuery(since), [], [])
+  // "dexie-react-hooks": "/Volumes/Stripe/Dev/Dexie.js/libs/dexie-react-hooks"
+  const activeTasks = useLiveQuery(ActiveTasksQuery, [], [])
 
-  const activeTasks = useLiveQuery(ActiveTasksQuery, [isDirty]) ?? []
-  activeTasks.reverse()
-  console.log('rendering', activeTasks)
+  // activeTasks.reverse()
+  console.log('rendering', activeTasks.length, activeTasks[0])
   // isDirty && setIsDirty(false)
 
   const onCheck = (checkedTask: Task) => {
@@ -29,13 +33,14 @@ export default function ActiveTasks () {
   }
   const onDelete = (deletedTask: TaskVM) => {
     void delActiveTask(deletedTask.id)
-    setIsDirty(true)
+    setIsDirty(!isDirty)
   }
   const inputRef = useRef<any>()
 
-  function updateTask (task: Task, newVal) {
+  async function updateTask (task: Task, newVal) {
     task.task = newVal
-    void updateActiveTask(task)
+    await updateActiveTask(task)
+    setIsDirty(!isDirty)
   }
   // setTimeout(() => { setIsDirty(true) }, 1500)
   return (
@@ -54,7 +59,7 @@ export default function ActiveTasks () {
                 placeholder="Write a task name"
                 type="input"
                 childRef={inputRef}
-                onEnter = {(e: KeyboardEvent) => updateTask(task, (e.target as HTMLInputElement)?.value)}
+                onEnter = {(e: KeyboardEvent) => { void updateTask(task, (e.target as HTMLInputElement)?.value) }}
             />
             {/* <TaskMods {...{ task }} /> */}
             <IconButton onClick={() => onDelete(task)}>

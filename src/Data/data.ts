@@ -27,6 +27,7 @@ export const completeActiveTask = async (cTask: Task) => cTask
   && (await todoDB.CompletedTasks.add(new Task({ ...cTask, status: TaskStatus.Completed, modified: utcMsTs() })))
   && (await todoDB.ActiveTasks.delete((cTask as TaskVM).id))
 
-export const ActiveTasksQuery = () => todoDB.ActiveTasks.toArray() /// orderBy('modified').
+export const ActiveTasksQuery = () => todoDB.ActiveTasks.orderBy('modified').reverse().toArray() /// orderBy('modified').
+export const ActiveTasksSinceQuery = (since: number) => todoDB.ActiveTasks.where('modified').aboveOrEqual(since).toArray() /// orderBy('modified').
 export const CompletedTasksQuery = () => todoDB.CompletedTasks.toArray()
 export const ModificationsQuery = (key: CompoundKeyNumStr = [0, '']) => modDB.Mods.where('forKey').equals(key).toArray()

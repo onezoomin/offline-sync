@@ -1,4 +1,4 @@
-import prefresh from '@prefresh/vite'
+import preactRefresh from '@prefresh/vite'
 // import nodePolyfills from 'rollup-plugin-polyfill-node'
 import { defineConfig } from 'vite'
 import WindiCSS from 'vite-plugin-windicss'
@@ -11,7 +11,7 @@ export default defineConfig({
       overlay: false,
     },
     // cors: {
-    //   allowedHeaders: '*',
+    //   allowedHeaders: '* ',
     // },
     // },o
   },
@@ -31,7 +31,7 @@ export default defineConfig({
     },
   },
   plugins: [
-    prefresh({
+    preactRefresh({
       // exclude: [
       //   'src/Data/WebWorker.ts',
 

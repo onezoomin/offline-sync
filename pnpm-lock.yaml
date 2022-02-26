@@ -1,8 +1,7 @@
 lockfileVersion: 5.3
 
 overrides:
-  dexie: /Volumes/Stripe/Dev/Dexie.js
-  dexie-react-hooks: /Volumes/Stripe/Dev/Dexie.js/libs/dexie-react-hooks
+  not-dexie: /Volumes/Stripe/Dev/Dexie.js
 
 importers:
 
@@ -25,8 +24,8 @@ importers:
       buffer: ^6.0.3
       cross-env: ^7.0.3
       date-fns: ^2.28.0
-      dexie: /Volumes/Stripe/Dev/Dexie.js
-      dexie-react-hooks: /Volumes/Stripe/Dev/Dexie.js/libs/dexie-react-hooks
+      dexie: ^4.0.0-alpha.1
+      dexie-react-hooks: ^1.1.1
       diff: ^5.0.0
       diff-lines: ^1.1.1
       dotenv: ^16.0.0
@@ -78,8 +77,8 @@ importers:
       axios: 0.26.0
       buffer: 6.0.3
       date-fns: 2.28.0
-      dexie: link:../Dexie.js
-      dexie-react-hooks: link:../Dexie.js/libs/dexie-react-hooks
+      dexie: 4.0.0-alpha.1
+      dexie-react-hooks: 1.1.1_f45cf25394e285fe4b4df94cbce19a55
       diff: 5.0.0
       diff-lines: 1.1.1
       events: 3.3.0
@@ -3966,6 +3965,22 @@ packages:
       defined: 1.0.0
     dev: false
 
+  /dexie-react-hooks/1.1.1_f45cf25394e285fe4b4df94cbce19a55:
+    resolution: {integrity: sha512-Cam5JP6PxHN564RvWEoe8cqLhosW0O4CAZ9XEVYeGHJBa6KEJlOpd9CUpV3kmU9dm2MrW97/lk7qkf1xpij7gA==}
+    peerDependencies:
+      '@types/react': '>=16'
+      dexie: '>=3.1.0-alpha.1 <5.0.0'
+      react: '>=16'
+    dependencies:
+      '@types/react': 17.0.39
+      dexie: 4.0.0-alpha.1
+    dev: false
+
+  /dexie/4.0.0-alpha.1:
+    resolution: {integrity: sha512-/Ft0iWYFNL/U7tRWXLXKVoeMwvegNKIcXdi0Cbd9MYIan+56GY9wVHy9dDFBzxkZrsuKs48j7jEYE4T+T3PGjQ==}
+    engines: {node: '>=6.0'}
+    dev: false
+
   /diff-lines/1.1.1:
     resolution: {integrity: sha512-Oo5JzEEriF/+T0usOeRP5yOzr6SWvni2rrxvIgijMZSxPcEvf8JOvCO5GpnWwkte7fcOgnue/f5ECg1H9lMPCw==}
     dependencies:
@@ -7668,7 +7683,7 @@ packages:
       crypto-js: 4.1.1
       custom-idle-queue: 3.0.1
       deep-freeze: 0.0.1
-      dexie: link:../Dexie.js
+      dexie: 4.0.0-alpha.1
       event-reduce-js: 2.0.3
       express: 4.17.2
       fast-deep-equal: 3.1.3

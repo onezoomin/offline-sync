@@ -20,19 +20,19 @@ self.onmessage = async (e) => {
       const { dbName, stores } = e.data
       const { default: BygonzDexie } = await import('./Bygonz')
 
-      const uncastDB = new BygonzDexie(dbName, stores)
-      if (!(await BygonzDexie.exists(uncastDB.name))) {
+      const unmappedDB = new BygonzDexie(dbName, stores)
+      if (!(await BygonzDexie.exists(unmappedDB.name))) {
         console.log('Db does not exist')
       // db.version(1).stores({});
       }
-      await uncastDB.open()
+      await unmappedDB.open()
 
-      targetDB = uncastDB as typeof BygonzDexie
+      targetDB = unmappedDB
       checkWorker('just opened ->', targetDB)
     } else {
       checkWorker('already opened ->', targetDB)
     }
-    const { getModDB } = await import('./WebWorkerImports/Mods.ts')
+    const { getModDB } = await import('./WebWorkerImports/Mods')
     const { dgraphMod, fetchAndApplyMods } = await import('./WebWorkerImports/dgraph-socket')
     modDB = await getModDB()
     checkWorker('mod ->', modDB)
@@ -44,16 +44,19 @@ self.onmessage = async (e) => {
 
       void modTable.put(modLogEntry)
       await dgraphMod(modLogEntry)
-      fetchAndApplyMods(modDB, targetDB)
+      void fetchAndApplyMods(modDB, targetDB)
     }
-    fetchAndApplyMods(modDB, targetDB, true)
-    const addTask = async () => {
-      const ts = utcMsTs()
-      const task = `${ts} ww create ${(Math.random() * 2000).toFixed(0)}`
-      await targetDB?.ActiveTasks?.add({ task, owner: '0xWW', status: 'active', modified: ts, created: ts })
-    }
-    void addTask()
-    setTimeout(addTask, 1500)
+
+    void fetchAndApplyMods(modDB, targetDB, true)
+
+    // mock data from here doesn't make sense as it will not use the middleware to create mods
+    // const addTask = async () => {
+    //   const ts = utcMsTs()
+    //   const task = `${ts} ww create ${(Math.random() * 2000).toFixed(0)}`
+    //   await targetDB?.ActiveTasks?.add({ task, owner: '0xWW', status: 'active', modified: ts, created: ts })
+    // }
+    // void addTask()
+    // setTimeout(() => { void addTask() }, 1500)
 
     // const { default: { liveQuery } } = await import('dexie')
 
@@ -83,7 +86,7 @@ self.onmessage = async (e) => {
 
     bc.onmessage = (ev) => {
       // if (ev.data) propagateLocally(ev.data);
-      console.log('bygonz afterEffect', ev, utcMsTs())
+      checkWorker('bygonz afterEffect', ev, utcMsTs())
 
       const { data: modEntry } = ev
       void commitMod(modEntry)

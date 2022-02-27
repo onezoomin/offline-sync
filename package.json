@@ -1,6 +1,6 @@
 {
   "name": "offline-sync",
-  "version": "0.8.20",
+  "version": "0.8.21",
   "repository": "https://github.com/onezoomin/offline-sync",
   "license": "CC-BY-NC-4.0",
   "scripts": {

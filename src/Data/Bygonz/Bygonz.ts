@@ -1,13 +1,19 @@
-import { getBygonzMiddlwareFor } from './BygonzMiddleware'
 import { Dexie } from 'dexie'
+import { getBygonzMiddlwareFor } from './BygonzMiddleware'
 
 // import BygonzWorker from './BygonzWebWorker?worker&inline'
 // const { default: BygonzWorker } = await import('./BygonzWebWorker?worker')
-
+const defaultOptions = {
+  conflictThresholds: {
+    red: 60,
+    yellow: 300,
+  },
+}
 export default class BygonzDexie extends Dexie {
   public workerApi
   public stores
   public mappings
+  public options
 
   public onWorkerMsg = console.log
   private async spawnWorker () {
@@ -18,12 +24,12 @@ export default class BygonzDexie extends Dexie {
     const { default: BygonzWorker } = await import('./BygonzWebWorker?worker&inline')
     this.workerApi = new BygonzWorker()
     this.workerApi.onmessage = this.onWorkerMsg
-    this.workerApi.postMessage({ cmd: 'init', dbName: this.name.replace('_BygonzDexie', ''), stores: this.stores }) // init
+    this.workerApi.postMessage({ cmd: 'init', dbName: this.name.replace('_BygonzDexie', ''), stores: this.stores, options: this.options }) // init
   }
 
   private doMappings () {
     for (const eachTable of this.tables) {
-      this[eachTable.name] = eachTable
+      this[eachTable.name] = eachTable // ensure there is a reference to each table "on" the db instance
       if (this.mappings[eachTable.name]) {
         // console.log(this[eachTable.name], 'mapping', eachTable, 'to', mappings[eachTable.name])
         eachTable.mapToClass(this.mappings[eachTable.name])
@@ -31,15 +37,17 @@ export default class BygonzDexie extends Dexie {
     }
   }
 
-  constructor (name: string, stores: Record<string, string>, mappings: Record<string, any> = {}, version = 1) {
+  constructor (name: string, stores: Record<string, string>, mappings: Record<string, any> = {}, options = defaultOptions, version = 1) {
     if (!name || !stores) throw new Error('BygonzDexie requires params (name, {stores})')
     super(`${name}_BygonzDexie`)
 
     this.version(version).stores(stores)
 
+    this.options = options
     this.stores = stores
     this.mappings = mappings
     this.doMappings()
+
     if (self.document !== undefined) {
       console.log('ui side, setting up middleware and spawning worker')
       this.use(getBygonzMiddlwareFor(this))

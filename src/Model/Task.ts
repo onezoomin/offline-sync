@@ -1,4 +1,4 @@
-import { utcMsTs } from '../Data/bygonz'
+import { ModWho, TimeStampedBase } from '../Data/Bygonz/WebWorkerImports/Mods'
 import { TaskStatus } from './TaskStatus'
 
 export type CompoundKeyNumStr = [number, string]
@@ -7,24 +7,18 @@ export type CompoundKeyNumStr = [number, string]
 export interface TaskParams {
   created?: number
   owner?: string
+  modifier?: string
 
   modified?: number
   task: string
   status: TaskStatus
 }
-export class TimeStampedBase {
-  created: number = utcMsTs()
-  modified: number = this.created
 
-  constructor (obj: any) {
-    Object.assign(this, obj)
-  }
-}
-
-export class Task extends TimeStampedBase {
+export class Task extends TimeStampedBase implements ModWho {
   task: string
   status: TaskStatus = TaskStatus.Active
   owner: string
+  modifier: string
 
   constructor (obj: TaskParams) {
     super(obj)

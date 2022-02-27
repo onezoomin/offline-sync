@@ -5,6 +5,7 @@ import fromUnixTime from 'date-fns/fromUnixTime'
 import getMinutes from 'date-fns/getMinutes'
 import set from 'date-fns/set'
 import { PromiseExtended, Table } from 'dexie'
+import { defer } from 'lodash'
 import { TaskVM } from '../../../Model/Task'
 import { CompoundKeyNumStr, ModVM, Operations } from './Mods'
 import { checkWorker, utcMsTs } from './Utils'
@@ -354,6 +355,57 @@ export const fetchAndApplyMods = async (modDB, targetDB, forceSinceZero = false)
       }
     }
   }
+  setTimeout(() => {
+    void findAndFlagConflicts(modDB, targetDB)
+  })
   console.log('fetchAndApply took', utcMsTs() - (pendingFetches.pop() ?? 0))
   setTimeout(() => { void fetchAndApplyMods(modDB, targetDB) }, nextMinute - nownow)
+}
+const exampleCustomHandler = (allModsForKey: ModVM[]) => {
+  defer(() => {
+    const customFlags = []
+    // console.log('exampleCustomHandler', allModsForKey)
+    for (const eachMod of allModsForKey) {
+
+    }
+  })
+}
+
+export const findAndFlagConflicts = async (modDB, targetDB, forceSinceZero = false) => {
+  const st = utcMsTs()
+  const { conflictThresholds: { red, yellow } } = targetDB.options // conflictHandlers: { customFlag = exampleCustomHandler },
+  const allKnownMods = (await modDB.Mods.orderBy('forKey').toArray() ?? []) as ModVM[]
+
+  const modsMappedbyForKey = new Map()
+  interface flagObj { thisMod: ModVM, prevMod: ModVM, diffInSec: number }
+  const redFlags: flagObj[] = []
+  const yellowFlags: flagObj[] = []
+
+  let prevKey = ''
+  let prevMod
+  for (const thisMod of allKnownMods) {
+    const thisKey = thisMod.gqlForKey
+    const thisModArray = modsMappedbyForKey.get(thisKey) ?? []
+    if (prevKey) { // start testing on the second one
+      if (thisKey !== prevKey) {
+        // const prevModArray = modsMappedbyForKey.get(prevKey)
+        // if (prevModArray.length > 1) exampleCustomHandler(prevModArray) // spin off a call to each custom conflictHandler as soon as the loop finishes
+      } else if (thisMod.tableName === prevMod.tableName && thisMod.modifier !== prevMod.modifier) { // && thisMod.modifier !== prevMod.modifier
+        const diffInSec = (thisMod.ts - prevMod.ts) * 0.001
+        if (diffInSec < red) {
+          console.log('found red flag', thisMod, prevMod)
+          redFlags.push({ thisMod, prevMod, diffInSec })
+        } else if (diffInSec < yellow) {
+          console.log('found yellow flag', thisMod, prevMod)
+          yellowFlags.push({ thisMod, prevMod, diffInSec })
+        }
+      }
+    }
+    // console.log(thisModArray)
+    thisModArray.push(thisMod)
+    modsMappedbyForKey.set(thisKey, thisModArray)
+    prevKey = thisKey
+    prevMod = thisMod
+  }
+  console.log('took', utcMsTs() - st, 'all mods mapped by key', modsMappedbyForKey, { yellowFlags, redFlags })
 }

@@ -1,4 +1,5 @@
 import Dexie from 'dexie'
+import { utcMsTs } from './Utils'
 
 export type CompoundKeyNumStr = [number, string]
 export type ModCompoundKey = [number /* ts */, string /* modifier */, string /* op */, string /* tableName */, [number /* created */, string /* owner */]]
@@ -27,8 +28,19 @@ export const OpCodes = {
 //   op: OpCodes
 //   log: String!
 // }
+export class TimeStampedBase {
+  created: number = utcMsTs()
+  modified: number = this.created
 
-export class ModObj {
+  constructor (obj: any) {
+    Object.assign(this, obj)
+  }
+}
+export interface ModWho {
+  owner: string
+  modifier: string
+}
+export class ModObj implements ModWho {
   ts: number
   tableName: string
   forKey: CompoundKeyNumStr
@@ -49,10 +61,18 @@ export class ModVM extends ModObj {
 
   public forGql (): Record<any, any> { // TODO create type for jsonified mod
     const mod: Record<any, any> = { ...this }
-    mod.key = JSON.stringify(ModVM.getCompoundKey(this))
+    mod.key = this.gqlKey
     mod.log = JSON.stringify(this.log)
     mod.forKey = JSON.stringify(this.forKey)
     return mod
+  }
+
+  public get gqlKey (): string {
+    return JSON.stringify(ModVM.getCompoundKey(this))
+  }
+
+  public get gqlForKey (): string {
+    return JSON.stringify(this.forKey)
   }
 
   public get opString (): string {

@@ -3,8 +3,7 @@ import DeleteForeverIcon from '@mui/icons-material/DeleteForever'
 import { IconButton } from '@mui/material'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { h } from 'preact'
-import { useRef, useState } from 'preact/hooks'
-import { utcMsTs } from '../../Data/Bygonz/WebWorkerImports/Utils'
+import { useRef } from 'preact/hooks'
 import { ActiveTasksQuery, completeActiveTask, delActiveTask, ModificationsQuery, updateActiveTask } from '../../Data/data'
 import { Task, TaskVM } from '../../Model/Task'
 import Editable from '../Editable'
@@ -16,14 +15,13 @@ function TaskMods ({ task: { id } }) {
   )
 }
 export default function ActiveTasks () {
-  const [isDirty, setIsDirty] = useState(false)
-  const [since, setSince] = useState(utcMsTs())
+  // const [isDirty, setIsDirty] = useState(false)
+  // const [since, setSince] = useState(utcMsTs())
   // const activeTasks = useObservable<TaskVM[]>(liveQuery(ActiveTasksQuery)) ?? [] // constant rerender loop
   // const newActiveTasks = useLiveQuery(() => ActiveTasksSinceQuery(since), [], [])
-  // "dexie-react-hooks": "/Volumes/Stripe/Dev/Dexie.js/libs/dexie-react-hooks"
+
   const activeTasks = useLiveQuery(ActiveTasksQuery, [], [])
 
-  // activeTasks.reverse()
   console.log('rendering', activeTasks.length, activeTasks[0])
   // isDirty && setIsDirty(false)
 
@@ -33,14 +31,14 @@ export default function ActiveTasks () {
   }
   const onDelete = (deletedTask: TaskVM) => {
     void delActiveTask(deletedTask.id)
-    setIsDirty(!isDirty)
+    // setIsDirty(!isDirty)
   }
   const inputRef = useRef<any>()
 
   async function updateTask (task: Task, newVal) {
     task.task = newVal
     await updateActiveTask(task)
-    setIsDirty(!isDirty)
+    // setIsDirty(!isDirty)
   }
   // setTimeout(() => { setIsDirty(true) }, 1500)
   return (

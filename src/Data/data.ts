@@ -23,7 +23,7 @@ export const addActiveTask = async (newTask: TaskParams) => {
   console.log('adding', newTask)
   await todoDB.ActiveTasks.put(newTask)
 }
-export const updateActiveTask = async (taskToUpdate: Task) => await todoDB.ActiveTasks.update(TaskVM.getCompoundKey(taskToUpdate), { task: taskToUpdate.task, modified: utcMsTs() })
+export const updateActiveTask = async (taskToUpdate: Task) => await todoDB.ActiveTasks.update(TaskVM.getCompoundKey(taskToUpdate), { task: taskToUpdate.task, modifier: userAddress, modified: utcMsTs() })
 // disabled cuz it looks like an add : // export const updateActiveTask = async (taskToUpdate: Task) => await todoDB.ActiveTasks.put(new Task({ ...taskToUpdate, modified: utcMsTs() }), TaskVM.getCompoundKey(taskToUpdate))
 export const delActiveTask = async (idToDelete: CompoundKeyNumStr) => await todoDB.ActiveTasks.delete(idToDelete)
 export const delCompletedTask = async (idToDelete: CompoundKeyNumStr) => await todoDB.CompletedTasks.delete(idToDelete)

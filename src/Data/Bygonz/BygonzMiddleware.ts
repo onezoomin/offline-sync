@@ -43,7 +43,7 @@ const getAfterEffectsFor = (tableName) => {
         tableName,
         forKey,
         owner: obj.owner,
-        modifier: obj.modifier ?? obj.owner ?? '??', // TODO userAddress, https://github.com/dexie/Dexie.js/blob/e865e80a3c05821db40ecc3c64157104d345b11e/addons/dexie-cloud/src/middlewares/createMutationTrackingMiddleware.ts#L81
+        modifier: obj.modifier ?? obj.owner ?? '??', // TODO consider user awareness down here, https://github.com/dexie/Dexie.js/blob/e865e80a3c05821db40ecc3c64157104d345b11e/addons/dexie-cloud/src/middlewares/createMutationTrackingMiddleware.ts#L81
         op: Operations.UPDATE,
         log: {
           put,
@@ -55,7 +55,7 @@ const getAfterEffectsFor = (tableName) => {
       bc.postMessage(modLogEntry)
     },
     async delete (reqCopy: DBCoreDeleteRequest & {tableRef: Table}, obj) {
-      const ts = utcMsTs()
+      const ts = obj.modified ?? utcMsTs()
       const forKey = reqCopy.keys[0]
       console.log('dbcore ae delete', reqCopy, obj)
       const modLogEntry = {
@@ -63,7 +63,7 @@ const getAfterEffectsFor = (tableName) => {
         tableName,
         forKey,
         owner: obj.owner,
-        modifier: obj.owner, // TODO userAddress,
+        modifier: obj.modifier ?? obj.owner ?? '??',
         op: Operations.DELETE,
         log: {
           obj,

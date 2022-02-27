@@ -17,31 +17,33 @@ let modDB
 self.onmessage = async (e) => {
   if (e.data.cmd === 'init') {
     if (!targetDB) {
-      const { dbName, stores } = e.data
+      const { dbName, stores, options } = e.data
       const { default: BygonzDexie } = await import('./Bygonz')
 
-      const unmappedDB = new BygonzDexie(dbName, stores)
-      if (!(await BygonzDexie.exists(unmappedDB.name))) {
+      if (!(await BygonzDexie.exists(`${dbName}_BygonzDexie`))) {
         console.log('Db does not exist')
       // db.version(1).stores({});
       }
-      await unmappedDB.open()
+      const unmappedDB = new BygonzDexie(dbName, stores, options)
+      // await unmappedDB.open()
 
       targetDB = unmappedDB
       checkWorker('just opened ->', targetDB)
     } else {
       checkWorker('already opened ->', targetDB)
     }
-    const { getModDB } = await import('./WebWorkerImports/Mods')
-    const { dgraphMod, fetchAndApplyMods } = await import('./WebWorkerImports/dgraph-socket')
-    modDB = await getModDB()
-    checkWorker('mod ->', modDB)
+    if (!modDB) {
+      const { getModDB } = await import('./WebWorkerImports/Mods')
+      modDB = await getModDB()
+      checkWorker('just opened ->', modDB)
+    } else {
+      checkWorker('already opened ->', modDB)
+    }
 
+    const { dgraphMod, fetchAndApplyMods } = await import('./WebWorkerImports/dgraph-socket')
     const modTable = modDB.Mods
 
     const commitMod = async (modLogEntry) => {
-      // if (hookState.isSuspended) return // console.log('skipping commit')
-
       await modTable.put(modLogEntry)
       await dgraphMod(modLogEntry)
       void fetchAndApplyMods(modDB, targetDB)

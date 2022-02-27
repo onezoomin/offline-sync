@@ -28,5 +28,12 @@ const mappings = {
   ActiveTasks: TaskVM,
   CompletedTasks: TaskVM,
 }
-export const todoDB = new TodoDB('Todo', stores, mappings)
+const options = {
+  conflictThresholds: {
+    red: 120,
+    yellow: 600,
+  },
+  conflictHandlers: {},
+}
+export const todoDB = new TodoDB('Todo', stores, mappings, options)
 await todoDB.init()
